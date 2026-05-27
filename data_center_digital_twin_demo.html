@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Center Digital Twin Demo</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --yellow: #ca8a04;
+      --red: #dc2626;
+      --line: #334155;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+
+    .container { max-width: 1500px; margin: 0 auto; }
+    header { margin-bottom: 24px; }
+    .eyebrow { color: var(--blue); font-weight: 800; font-size: 14px; margin: 0 0 6px; }
+    h1 { font-size: 34px; line-height: 1.1; margin: 0; }
+    h2 { font-size: 22px; margin: 0; }
+    h3 { margin: 0; }
+    .subtitle { color: var(--muted); max-width: 980px; line-height: 1.5; margin-top: 10px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(380px, 1fr);
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+      padding: 20px;
+    }
+
+    .card-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+    .small { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 12px; height: 12px; border-radius: 999px; display: inline-block; }
+
+    svg {
+      width: 100%;
+      height: 720px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+
+    .clickable { cursor: pointer; }
+    .clickable:hover text { fill: var(--blue); font-weight: 800; }
+    .selected .select-stroke { stroke: var(--blue) !important; stroke-width: 12 !important; }
+    .selected .select-fill { stroke: var(--blue) !important; stroke-width: 4 !important; fill: #dbeafe !important; }
+
+    .panel-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+    .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 10px; font-size: 13px; border: 1px solid; white-space: nowrap; font-weight: 800; }
+    .risk-low { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .risk-medium { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+    .risk-high { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+
+    .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .metric { background: #f8fafc; border: 1px solid var(--border); border-radius: 14px; padding: 12px; min-height: 72px; }
+    .metric-label { color: var(--muted); font-size: 12px; }
+    .metric-value { font-weight: 800; margin-top: 6px; }
+
+    .section { margin-top: 22px; }
+    .alarm-list { display: grid; gap: 8px; margin-top: 10px; }
+    .alarm { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 10px; font-size: 14px; }
+    .owner-box { margin-top: 16px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px; border-radius: 14px; font-size: 14px; }
+
+    .ai-panel { border-top: 1px solid var(--border); padding-top: 18px; }
+    .ai-header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+    .ai-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-top: 10px; font-size: 14px; }
+    .ai-box p { margin: 6px 0 0; color: #334155; line-height: 1.45; }
+    .ai-box ul, .ai-box ol { margin: 8px 0 0; padding-left: 20px; color: #334155; line-height: 1.45; }
+    .ai-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 800; }
+    .consequence { background: #fff7ed; border-color: #fed7aa; }
+
+    .ask-ai { margin-top: 14px; display: grid; gap: 8px; }
+    .ask-ai label { font-size: 13px; font-weight: 800; color: #334155; }
+    .ask-ai input { border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px; font-size: 14px; outline: none; }
+    .ask-ai input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #dbeafe; }
+    .ask-ai button { border: 0; border-radius: 12px; background: var(--blue); color: white; padding: 10px 12px; font-weight: 800; cursor: pointer; }
+    .ai-answer { margin-top: 10px; background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; border-radius: 14px; padding: 12px; font-size: 14px; line-height: 1.45; }
+
+    .footer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+    .info-card { background: #ffffff; border: 1px solid var(--border); border-radius: 18px; padding: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
+    .info-card p { color: var(--muted); font-size: 14px; line-height: 1.45; margin-bottom: 0; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; border-bottom: 1px solid var(--border); padding: 10px 8px; vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+
+    .test-status { margin-top: 16px; font-size: 13px; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px; }
+
+    @media (max-width: 1150px) {
+      .grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 14px; }
+      h1 { font-size: 26px; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: 1fr; }
+      svg { height: 560px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <p class="eyebrow">Data Center Digital Twin Prototype</p>
+      <h1>Clickable Electrical / Cooling / IT Infrastructure Twin</h1>
+      <p class="subtitle">This standalone demo models a data center digital twin as an interactive one-line and systems map. Click any utility feed, switchgear, UPS, generator, PDU, rack row, chiller, CRAH, or network core to view simulated telemetry, alarms, ownership, AI assessment, and operational risk.</p>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Interactive Data Center Systems Map</h2>
+            <p class="small">Click any object to view live status and AI risk assessment.</p>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="dot" style="background:#16a34a"></span>Normal / Online</span>
+            <span class="legend-item"><span class="dot" style="background:#ca8a04"></span>Attention</span>
+            <span class="legend-item"><span class="dot" style="background:#dc2626"></span>Alarm</span>
+          </div>
+        </div>
+
+        <svg viewBox="0 0 1100 760" aria-label="Interactive data center digital twin diagram">
+          <!-- Utility feeds -->
+          <g class="clickable device selected" data-id="UTILA">
+            <rect class="select-fill" x="65" y="40" width="130" height="58" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="130" y="65" text-anchor="middle" font-size="13">Utility Feed A</text>
+            <text x="130" y="84" text-anchor="middle" font-size="11" fill="#64748b">13.2 kV</text>
+            <circle cx="180" cy="52" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable device" data-id="UTILB">
+            <rect class="select-fill" x="905" y="40" width="130" height="58" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="970" y="65" text-anchor="middle" font-size="13">Utility Feed B</text>
+            <text x="970" y="84" text-anchor="middle" font-size="11" fill="#64748b">13.2 kV</text>
+            <circle cx="1020" cy="52" r="7" fill="#16a34a" />
+          </g>
+
+          <line x1="130" y1="98" x2="130" y2="145" stroke="#334155" stroke-width="4" />
+          <line x1="970" y1="98" x2="970" y2="145" stroke="#334155" stroke-width="4" />
+
+          <!-- MV switchgear -->
+          <g class="clickable device" data-id="SWGA">
+            <rect class="select-fill" x="60" y="145" width="140" height="70" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="130" y="175" text-anchor="middle" font-size="13">MV Switchgear A</text>
+            <text x="130" y="196" text-anchor="middle" font-size="11" fill="#64748b">Main-Tie-Main</text>
+            <circle cx="185" cy="158" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable device" data-id="SWGB">
+            <rect class="select-fill" x="900" y="145" width="140" height="70" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="970" y="175" text-anchor="middle" font-size="13">MV Switchgear B</text>
+            <text x="970" y="196" text-anchor="middle" font-size="11" fill="#64748b">Main-Tie-Main</text>
+            <circle cx="1025" cy="158" r="7" fill="#16a34a" />
+          </g>
+
+          <line x1="200" y1="180" x2="900" y2="180" stroke="#334155" stroke-width="3" stroke-dasharray="8 8" />
+          <text x="550" y="166" text-anchor="middle" font-size="12" fill="#64748b">Normally Open MV Tie / Transfer Path</text>
+
+          <line x1="130" y1="215" x2="130" y2="270" stroke="#334155" stroke-width="4" />
+          <line x1="970" y1="215" x2="970" y2="270" stroke="#334155" stroke-width="4" />
+
+          <!-- Transformers -->
+          <g class="clickable transformer" data-id="TXA">
+            <circle class="select-fill" cx="130" cy="298" r="24" fill="white" stroke="#334155" stroke-width="2" />
+            <circle class="select-fill" cx="130" cy="326" r="24" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="130" y="370" text-anchor="middle" font-size="12">TX-A</text>
+            <circle cx="158" cy="285" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable transformer" data-id="TXB">
+            <circle class="select-fill" cx="970" cy="298" r="24" fill="white" stroke="#334155" stroke-width="2" />
+            <circle class="select-fill" cx="970" cy="326" r="24" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="970" y="370" text-anchor="middle" font-size="12">TX-B</text>
+            <circle cx="998" cy="285" r="7" fill="#ca8a04" />
+          </g>
+
+          <line x1="130" y1="350" x2="130" y2="415" stroke="#334155" stroke-width="4" />
+          <line x1="970" y1="350" x2="970" y2="415" stroke="#334155" stroke-width="4" />
+
+          <!-- LV switchboards and buses -->
+          <g class="clickable bus" data-id="LVA">
+            <line class="select-stroke" x1="70" y1="415" x2="480" y2="415" stroke="#111827" stroke-width="8" stroke-linecap="round" />
+            <text x="275" y="395" text-anchor="middle" font-size="14">480 V Critical Bus A</text>
+            <circle cx="495" cy="415" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable bus" data-id="LVB">
+            <line class="select-stroke" x1="620" y1="415" x2="1030" y2="415" stroke="#111827" stroke-width="8" stroke-linecap="round" />
+            <text x="825" y="395" text-anchor="middle" font-size="14">480 V Critical Bus B</text>
+            <circle cx="1045" cy="415" r="7" fill="#16a34a" />
+          </g>
+
+          <line x1="480" y1="415" x2="620" y2="415" stroke="#334155" stroke-width="3" stroke-dasharray="8 8" />
+          <text x="550" y="442" text-anchor="middle" font-size="12" fill="#64748b">LV Tie / STS Transfer Logic</text>
+
+          <!-- Generators -->
+          <g class="clickable device" data-id="GENA">
+            <circle class="select-fill" cx="320" cy="285" r="34" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="320" y="290" text-anchor="middle" font-size="13">GEN-A</text>
+            <circle cx="350" cy="260" r="7" fill="#16a34a" />
+          </g>
+          <line x1="320" y1="319" x2="320" y2="415" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable device" data-id="GENB">
+            <circle class="select-fill" cx="780" cy="285" r="34" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="780" y="290" text-anchor="middle" font-size="13">GEN-B</text>
+            <circle cx="810" cy="260" r="7" fill="#16a34a" />
+          </g>
+          <line x1="780" y1="319" x2="780" y2="415" stroke="#334155" stroke-width="4" />
+
+          <!-- UPS -->
+          <line x1="210" y1="415" x2="210" y2="490" stroke="#334155" stroke-width="4" />
+          <line x1="420" y1="415" x2="420" y2="490" stroke="#334155" stroke-width="4" />
+          <line x1="680" y1="415" x2="680" y2="490" stroke="#334155" stroke-width="4" />
+          <line x1="890" y1="415" x2="890" y2="490" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable device" data-id="UPSA1">
+            <rect class="select-fill" x="150" y="490" width="120" height="64" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="210" y="518" text-anchor="middle" font-size="13">UPS A1</text>
+            <text x="210" y="538" text-anchor="middle" font-size="11" fill="#64748b">Battery 94%</text>
+            <circle cx="255" cy="503" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable device" data-id="UPSA2">
+            <rect class="select-fill" x="360" y="490" width="120" height="64" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="420" y="518" text-anchor="middle" font-size="13">UPS A2</text>
+            <text x="420" y="538" text-anchor="middle" font-size="11" fill="#64748b">Battery 91%</text>
+            <circle cx="465" cy="503" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable device" data-id="UPSB1">
+            <rect class="select-fill" x="620" y="490" width="120" height="64" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="680" y="518" text-anchor="middle" font-size="13">UPS B1</text>
+            <text x="680" y="538" text-anchor="middle" font-size="11" fill="#64748b">Battery 88%</text>
+            <circle cx="725" cy="503" r="7" fill="#ca8a04" />
+          </g>
+
+          <g class="clickable device" data-id="UPSB2">
+            <rect class="select-fill" x="830" y="490" width="120" height="64" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="890" y="518" text-anchor="middle" font-size="13">UPS B2</text>
+            <text x="890" y="538" text-anchor="middle" font-size="11" fill="#64748b">Battery 93%</text>
+            <circle cx="935" cy="503" r="7" fill="#16a34a" />
+          </g>
+
+          <!-- PDUs / IT rows -->
+          <line x1="210" y1="554" x2="210" y2="600" stroke="#334155" stroke-width="4" />
+          <line x1="420" y1="554" x2="420" y2="600" stroke="#334155" stroke-width="4" />
+          <line x1="680" y1="554" x2="680" y2="600" stroke="#334155" stroke-width="4" />
+          <line x1="890" y1="554" x2="890" y2="600" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable device" data-id="PDUA">
+            <rect class="select-fill" x="130" y="600" width="160" height="55" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="210" y="625" text-anchor="middle" font-size="13">PDU / RPP A</text>
+            <text x="210" y="642" text-anchor="middle" font-size="11" fill="#64748b">Rows A1-A4</text>
+            <circle cx="275" cy="613" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable device" data-id="RACKA">
+            <rect class="select-fill" x="335" y="600" width="170" height="55" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="420" y="625" text-anchor="middle" font-size="13">IT Row A</text>
+            <text x="420" y="642" text-anchor="middle" font-size="11" fill="#64748b">42 racks</text>
+            <circle cx="490" cy="613" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable device" data-id="PDUB">
+            <rect class="select-fill" x="600" y="600" width="160" height="55" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="680" y="625" text-anchor="middle" font-size="13">PDU / RPP B</text>
+            <text x="680" y="642" text-anchor="middle" font-size="11" fill="#64748b">Rows B1-B4</text>
+            <circle cx="745" cy="613" r="7" fill="#ca8a04" />
+          </g>
+
+          <g class="clickable device" data-id="RACKB">
+            <rect class="select-fill" x="805" y="600" width="170" height="55" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="890" y="625" text-anchor="middle" font-size="13">IT Row B</text>
+            <text x="890" y="642" text-anchor="middle" font-size="11" fill="#64748b">42 racks</text>
+            <circle cx="960" cy="613" r="7" fill="#ca8a04" />
+          </g>
+
+          <!-- Cooling and network objects -->
+          <g class="clickable device" data-id="CHW">
+            <rect class="select-fill" x="60" y="690" width="170" height="48" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="145" y="710" text-anchor="middle" font-size="13">Chilled Water Plant</text>
+            <text x="145" y="728" text-anchor="middle" font-size="11" fill="#64748b">N+1 available</text>
+            <circle cx="215" cy="702" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable device" data-id="CRAH">
+            <rect class="select-fill" x="295" y="690" width="170" height="48" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="380" y="710" text-anchor="middle" font-size="13">CRAH Loop</text>
+            <text x="380" y="728" text-anchor="middle" font-size="11" fill="#64748b">Delta-T attention</text>
+            <circle cx="450" cy="702" r="7" fill="#ca8a04" />
+          </g>
+
+          <g class="clickable device" data-id="BMS">
+            <rect class="select-fill" x="535" y="690" width="170" height="48" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="620" y="710" text-anchor="middle" font-size="13">BMS / EPMS</text>
+            <text x="620" y="728" text-anchor="middle" font-size="11" fill="#64748b">Telemetry source</text>
+            <circle cx="690" cy="702" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable device" data-id="NETCORE">
+            <rect class="select-fill" x="775" y="690" width="170" height="48" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="860" y="710" text-anchor="middle" font-size="13">Network Core</text>
+            <text x="860" y="728" text-anchor="middle" font-size="11" fill="#64748b">Redundant links</text>
+            <circle cx="930" cy="702" r="7" fill="#16a34a" />
+          </g>
+        </svg>
+      </section>
+
+      <aside class="card" id="asset-panel">
+        <div class="panel-top">
+          <div>
+            <p class="small" style="margin:0">Selected Asset</p>
+            <h2 id="asset-name">Utility Feed A</h2>
+            <p class="small" id="asset-type">Utility Service</p>
+          </div>
+          <span id="risk-badge" class="badge risk-low">Low Risk</span>
+        </div>
+        <div class="metrics" id="metrics"></div>
+        <div class="section">
+          <h3>Active Alarms / Notes</h3>
+          <div class="alarm-list" id="alarms"></div>
+        </div>
+        <div class="owner-box" id="owner-box"><strong>Data owner:</strong> Facilities Operations</div>
+        <p class="small" id="last-update">Last update: simulated live data</p>
+
+        <div class="section ai-panel">
+          <div class="ai-header">
+            <div>
+              <p class="eyebrow" style="margin:0">AI Operations Assistant</p>
+              <h3 id="ai-title">Asset assessment</h3>
+            </div>
+            <span id="ai-confidence" class="badge risk-medium">Medium Confidence</span>
+          </div>
+          <div class="ai-box"><div class="ai-label">Assessment</div><p id="ai-assessment"></p></div>
+          <div class="ai-box"><div class="ai-label">Evidence Used</div><ul id="ai-evidence"></ul></div>
+          <div class="ai-box"><div class="ai-label">Recommended Next Checks</div><ol id="ai-actions"></ol></div>
+          <div class="ai-box consequence"><div class="ai-label">Availability / Operations Consequence</div><p id="ai-consequence"></p></div>
+          <div class="ask-ai">
+            <label for="ai-question">Ask the twin</label>
+            <input id="ai-question" type="text" placeholder="Example: What could cause downtime for this asset?" />
+            <button id="ai-ask-button" type="button">Ask</button>
+          </div>
+          <div id="ai-answer" class="ai-answer">Try asking about downtime risk, capacity, alarms, maintenance, or ownership.</div>
+        </div>
+      </aside>
+    </main>
+
+    <section class="card" style="margin-top:24px">
+      <h2>Digital Twin Readiness / Operational Risk Checks</h2>
+      <p class="small">A useful data center twin should expose gaps before they become incidents, failed MOPs, deferred maintenance surprises, or capacity-planning mistakes.</p>
+      <div class="table-wrap" style="margin-top:14px">
+        <table>
+          <thead><tr><th>ID</th><th>Category</th><th>Issue</th><th>Consequence</th><th>Severity</th></tr></thead>
+          <tbody>
+            <tr><td>DCT-001</td><td>Completeness</td><td>UPS B1 battery runtime is lower than peer units</td><td>Reduced ride-through margin during transfer or generator start failure</td><td>High</td></tr>
+            <tr><td>DCT-002</td><td>Consistency</td><td>PDU B load appears high relative to IT Row B rack temperature trend</td><td>Electrical and cooling capacity plans may disagree</td><td>Medium</td></tr>
+            <tr><td>DCT-003</td><td>Interface</td><td>BMS and EPMS ownership split is not shown for cooling alarms</td><td>Incident response may stall during thermal event</td><td>Medium</td></tr>
+            <tr><td>DCT-004</td><td>Operations</td><td>MV and LV tie logic is visible but not linked to approved MOP steps</td><td>Switching risk during maintenance window</td><td>High</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="test-status" id="test-status">Self-tests not run yet.</div>
+    </section>
+
+    <section class="footer-grid">
+      <div class="info-card"><h3>Operations</h3><p>Operators click the actual system object and see live state instead of hunting through BMS, EPMS, DCIM, and ticketing systems.</p></div>
+      <div class="info-card"><h3>Engineering</h3><p>Engineers compare load, redundancy, breaker positions, cooling status, and ownership against the design basis.</p></div>
+      <div class="info-card"><h3>Maintenance</h3><p>MOPs can be validated against current topology, available redundancy, battery runtime, generator readiness, and thermal margin.</p></div>
+      <div class="info-card"><h3>Manager Value</h3><p>Reduces incident ambiguity, avoids preventable maintenance-window surprises, and improves capacity-planning confidence.</p></div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var assetData = {
+        UTILA: { name: "Utility Feed A", type: "Utility Service", status: "Online", voltage: "13.26 kV", current: "430 A", power: "9.8 MW", capacity: "62%", temperature: "N/A", runtime: "N/A", alarms: ["None"], comms: "Healthy", owner: "Facilities Operations", risk: "Low" },
+        UTILB: { name: "Utility Feed B", type: "Utility Service", status: "Online", voltage: "13.22 kV", current: "405 A", power: "9.3 MW", capacity: "59%", temperature: "N/A", runtime: "N/A", alarms: ["None"], comms: "Healthy", owner: "Facilities Operations", risk: "Low" },
+        SWGA: { name: "MV Switchgear A", type: "Medium Voltage Switchgear", status: "Normal", voltage: "13.26 kV", current: "430 A", power: "9.8 MW", capacity: "62%", temperature: "35 C", runtime: "N/A", alarms: ["Tie breaker open - normal"], comms: "Healthy", owner: "Electrical Operations", risk: "Low" },
+        SWGB: { name: "MV Switchgear B", type: "Medium Voltage Switchgear", status: "Normal", voltage: "13.22 kV", current: "405 A", power: "9.3 MW", capacity: "59%", temperature: "36 C", runtime: "N/A", alarms: ["Tie breaker open - normal"], comms: "Healthy", owner: "Electrical Operations", risk: "Low" },
+        TXA: { name: "Transformer TX-A", type: "13.2 kV / 480 V Transformer", status: "In Service", voltage: "13.26 kV / 482 V", current: "430 A / 11,750 A", power: "9.8 MW", capacity: "67%", temperature: "71 C winding", runtime: "N/A", alarms: ["Fans available"], comms: "Healthy", owner: "Electrical Engineering", risk: "Low" },
+        TXB: { name: "Transformer TX-B", type: "13.2 kV / 480 V Transformer", status: "Attention", voltage: "13.22 kV / 481 V", current: "405 A / 11,180 A", power: "9.3 MW", capacity: "64%", temperature: "82 C winding", runtime: "N/A", alarms: ["Winding temperature trending high"], comms: "Healthy", owner: "Electrical Engineering", risk: "Medium" },
+        LVA: { name: "480 V Critical Bus A", type: "Low Voltage Critical Bus", status: "Energized", voltage: "482 V", current: "11,750 A", power: "9.8 MW", capacity: "67%", temperature: "N/A", runtime: "N/A", alarms: ["None"], comms: "Healthy", owner: "Electrical Operations", risk: "Low" },
+        LVB: { name: "480 V Critical Bus B", type: "Low Voltage Critical Bus", status: "Energized", voltage: "481 V", current: "11,180 A", power: "9.3 MW", capacity: "64%", temperature: "N/A", runtime: "N/A", alarms: ["None"], comms: "Healthy", owner: "Electrical Operations", risk: "Low" },
+        GENA: { name: "Generator Plant A", type: "Diesel Generator Group", status: "Ready", voltage: "480 V", current: "0 A standby", power: "0.0 MW", capacity: "N+1 ready", temperature: "38 C jacket water", runtime: "36 hr fuel", alarms: ["Auto-start enabled"], comms: "Healthy", owner: "Facilities Operations", risk: "Low" },
+        GENB: { name: "Generator Plant B", type: "Diesel Generator Group", status: "Ready", voltage: "480 V", current: "0 A standby", power: "0.0 MW", capacity: "N+1 ready", temperature: "39 C jacket water", runtime: "34 hr fuel", alarms: ["Auto-start enabled"], comms: "Healthy", owner: "Facilities Operations", risk: "Low" },
+        UPSA1: { name: "UPS A1", type: "UPS Module", status: "Online", voltage: "480 V", current: "3,050 A", power: "2.5 MW", capacity: "71%", temperature: "31 C room", runtime: "11.5 min", alarms: ["Battery 94%"], comms: "Healthy", owner: "Critical Power", risk: "Low" },
+        UPSA2: { name: "UPS A2", type: "UPS Module", status: "Online", voltage: "480 V", current: "2,860 A", power: "2.3 MW", capacity: "66%", temperature: "30 C room", runtime: "10.8 min", alarms: ["Battery 91%"], comms: "Healthy", owner: "Critical Power", risk: "Low" },
+        UPSB1: { name: "UPS B1", type: "UPS Module", status: "Attention", voltage: "480 V", current: "3,230 A", power: "2.7 MW", capacity: "78%", temperature: "33 C room", runtime: "8.1 min", alarms: ["Battery runtime below peer average"], comms: "Healthy", owner: "Critical Power", risk: "Medium" },
+        UPSB2: { name: "UPS B2", type: "UPS Module", status: "Online", voltage: "480 V", current: "2,980 A", power: "2.4 MW", capacity: "69%", temperature: "31 C room", runtime: "10.9 min", alarms: ["Battery 93%"], comms: "Healthy", owner: "Critical Power", risk: "Low" },
+        PDUA: { name: "PDU / RPP A", type: "Power Distribution", status: "Normal", voltage: "208/120 V", current: "4,820 A", power: "1.72 MW", capacity: "58%", temperature: "29 C", runtime: "UPS-backed", alarms: ["None"], comms: "Healthy", owner: "Data Hall Operations", risk: "Low" },
+        RACKA: { name: "IT Row A", type: "Rack Row", status: "Normal", voltage: "208/120 V", current: "4,610 A", power: "1.65 MW", capacity: "61% IT load", temperature: "24 C supply / 34 C return", runtime: "UPS-backed", alarms: ["None"], comms: "Healthy", owner: "IT Operations", risk: "Low" },
+        PDUB: { name: "PDU / RPP B", type: "Power Distribution", status: "Attention", voltage: "208/120 V", current: "5,430 A", power: "1.96 MW", capacity: "76%", temperature: "32 C", runtime: "UPS-backed", alarms: ["Phase B load imbalance 9%"], comms: "Healthy", owner: "Data Hall Operations", risk: "Medium" },
+        RACKB: { name: "IT Row B", type: "Rack Row", status: "Attention", voltage: "208/120 V", current: "5,220 A", power: "1.88 MW", capacity: "74% IT load", temperature: "27 C supply / 41 C return", runtime: "UPS-backed", alarms: ["Hot aisle return temperature elevated"], comms: "Healthy", owner: "IT Operations", risk: "Medium" },
+        CHW: { name: "Chilled Water Plant", type: "Cooling Plant", status: "Normal", voltage: "480 V", current: "1,280 A", power: "0.92 MW", capacity: "58% cooling", temperature: "44 F supply / 56 F return", runtime: "N+1 available", alarms: ["None"], comms: "Healthy", owner: "Mechanical Operations", risk: "Low" },
+        CRAH: { name: "CRAH Loop", type: "Computer Room Air Handler Loop", status: "Attention", voltage: "480 V", current: "620 A", power: "0.41 MW", capacity: "72% airflow", temperature: "Delta-T 17 F", runtime: "N+1 available", alarms: ["Airflow balance attention near Row B"], comms: "Healthy", owner: "Mechanical Operations", risk: "Medium" },
+        BMS: { name: "BMS / EPMS", type: "Monitoring Platform", status: "Online", voltage: "N/A", current: "N/A", power: "N/A", capacity: "98% data quality", temperature: "N/A", runtime: "N/A", alarms: ["One stale thermal sensor in Row B"], comms: "Healthy", owner: "Controls / OT", risk: "Low" },
+        NETCORE: { name: "Network Core", type: "Data Center Network", status: "Online", voltage: "-48 V / UPS-backed", current: "N/A", power: "42 kW", capacity: "44% port utilization", temperature: "30 C inlet", runtime: "UPS-backed", alarms: ["None"], comms: "Healthy", owner: "Network Operations", risk: "Low" }
+      };
+
+      var aiInsights = {
+        UTILA: { title: "Utility Feed A is normal; verify source and transfer logic evidence", confidence: "Medium", assessment: "Utility Feed A is online and within expected voltage range. AI risk is mainly around whether the transfer sequence, breaker status, and utility event data are linked to the same operational model.", evidence: ["Feed is online", "Voltage is 13.26 kV", "No active alarm is shown"], actions: ["Verify utility meter source and scaling", "Confirm MV transfer logic and tie state", "Link outage event history to this feed", "Confirm MOP references for source transfer"], consequence: "If source and transfer evidence are not linked, operators may need to reconstruct topology during an outage or maintenance event." },
+        UTILB: { title: "Utility Feed B is normal; confirm independence from Feed A", confidence: "Medium", assessment: "Utility Feed B is online. A good twin should prove utility diversity and show whether both feeds share any upstream dependency.", evidence: ["Feed is online", "Voltage is 13.22 kV", "No active alarm is shown"], actions: ["Document upstream utility source diversity", "Confirm transfer conditions", "Link utility outage history", "Verify EPMS alarms for undervoltage/loss of source"], consequence: "Assumed utility diversity can create false confidence in availability planning." },
+        SWGA: { title: "MV Switchgear A is healthy; tie logic must be MOP-linked", confidence: "High", assessment: "Switchgear is normal and the tie is open as expected. AI would check breaker states against approved switching procedures before maintenance.", evidence: ["Tie breaker open - normal", "Switchgear status normal", "Feed A is online"], actions: ["Link breaker states to latest approved MOP", "Confirm protective relay alarms and control permissives", "Validate tie interlocks", "Confirm one-line matches actual switchgear lineup"], consequence: "Switchgear lineups can look normal but still be unsafe for maintenance if tie/interlock assumptions are not tied to the MOP." },
+        SWGB: { title: "MV Switchgear B is healthy; transfer readiness should be proven", confidence: "High", assessment: "Switchgear B is normal. AI would verify transfer readiness and ensure tie logic is documented for failure of Utility Feed B or Transformer B.", evidence: ["Tie breaker open - normal", "Switchgear status normal", "Feed B is online"], actions: ["Confirm automatic/manual transfer mode", "Verify relay target and trip alarm points", "Confirm tie-close permissives", "Check MOP step alignment"], consequence: "Incomplete transfer logic evidence can produce maintenance-window delays and operator hesitation." },
+        TXA: { title: "Transformer TX-A has acceptable thermal margin", confidence: "High", assessment: "TX-A is loaded at 67% with normal winding temperature. AI would continue trending load and temperature to catch cooling degradation early.", evidence: ["Capacity is 67%", "Winding temperature is 71 C", "Fans are available"], actions: ["Trend winding temperature against load", "Verify fan status points", "Confirm transformer alarm thresholds", "Check loading against redundancy scenario"], consequence: "Transformer thermal data becomes most important during N or N-1 maintenance states." },
+        TXB: { title: "Transformer TX-B needs thermal follow-up", confidence: "High", assessment: "TX-B is loaded below nameplate capacity but winding temperature is elevated compared with TX-A. This suggests cooling imbalance, ambient issue, sensor issue, or airflow restriction around the electrical room.", evidence: ["Winding temperature is 82 C", "Capacity is 64%", "Alarm says winding temperature trending high"], actions: ["Compare TX-B temperature with ambient and TX-A", "Verify fan operation and controls", "Check recent load transfer history", "Confirm high-temperature alarm thresholds", "Add inspection before next maintenance transfer"], consequence: "If TX-B thermal margin is ignored, a planned transfer or utility-source event could push it into alarm and reduce available redundancy." },
+        LVA: { title: "Critical Bus A is normal; verify downstream load balance", confidence: "Medium", assessment: "Bus A is energized and within expected load range. AI would compare UPS, PDU, and rack-row data to validate downstream load accounting.", evidence: ["Bus A is energized", "Load is 9.8 MW", "No active alarm is shown"], actions: ["Reconcile bus load with UPS/PDU totals", "Check tie availability", "Confirm breaker positions", "Validate EPMS data freshness"], consequence: "Bad load reconciliation can lead to wrong capacity decisions." },
+        LVB: { title: "Critical Bus B is normal, but downstream B-side assets show attention", confidence: "High", assessment: "Bus B itself is energized and normal, but UPS B1, PDU B, and IT Row B show attention states. AI treats this as a downstream risk cluster rather than a bus fault.", evidence: ["Bus B is energized", "UPS B1 has lower runtime", "PDU B and Row B show attention states"], actions: ["Review B-side load distribution", "Check UPS B1 battery health", "Review Row B thermal trend", "Verify PDU phase balance"], consequence: "Multiple moderate B-side issues can combine into a material availability risk during maintenance or loss of utility." },
+        GENA: { title: "Generator Plant A is ready; prove start and load acceptance evidence", confidence: "Medium", assessment: "Generator Plant A is available in standby. AI would validate readiness using auto-start state, fuel runtime, jacket water temperature, test history, and load-bank results.", evidence: ["Auto-start enabled", "36 hr fuel", "No active alarm is shown"], actions: ["Verify last successful start test", "Confirm fuel quality and level", "Check ATS/paralleling controls", "Link latest maintenance record"], consequence: "Generator readiness should not be inferred from status alone; failed start evidence often lives outside the one-line." },
+        GENB: { title: "Generator Plant B is ready; fuel runtime slightly lower than A", confidence: "Medium", assessment: "Generator Plant B is ready with 34 hours of fuel runtime. AI would verify runtime assumptions and make sure fuel calculations match current IT load.", evidence: ["Auto-start enabled", "34 hr fuel", "No active alarm is shown"], actions: ["Recalculate runtime at current B-side load", "Verify last start test", "Check fuel transfer system", "Review paralleling sequence"], consequence: "Fuel runtime assumptions can become wrong after load growth, reducing actual outage survivability." },
+        UPSA1: { title: "UPS A1 is healthy", confidence: "High", assessment: "UPS A1 is online with acceptable runtime and battery state. AI would continue comparing it against peer UPS modules.", evidence: ["Battery 94%", "Runtime 11.5 min", "Capacity 71%"], actions: ["Trend battery impedance if available", "Compare runtime with UPS A2", "Confirm bypass availability", "Link latest battery test"], consequence: "Healthy UPS data still needs test evidence before declaring maintenance readiness." },
+        UPSA2: { title: "UPS A2 is healthy", confidence: "High", assessment: "UPS A2 is online with acceptable runtime. AI would monitor battery age and runtime trend against A1.", evidence: ["Battery 91%", "Runtime 10.8 min", "Capacity 66%"], actions: ["Compare runtime to A1", "Verify battery test date", "Confirm static bypass status", "Check load sharing"], consequence: "UPS peer comparison helps catch early battery degradation." },
+        UPSB1: { title: "UPS B1 has reduced ride-through margin", confidence: "High", assessment: "UPS B1 is online but runtime is lower than peer units and load is higher. This is a real operational concern for transfer events or generator start failure scenarios.", evidence: ["Runtime is 8.1 min", "Capacity is 78%", "Alarm says battery runtime below peer average"], actions: ["Review latest battery test", "Compare battery impedance to peer UPS units", "Check load sharing with UPS B2", "Assess ride-through margin for generator start sequence", "Consider load balancing before B-side maintenance"], consequence: "Reduced UPS runtime can turn a normally manageable transfer event into an availability incident if generator start or transfer is delayed." },
+        UPSB2: { title: "UPS B2 is healthy but shares B-side exposure", confidence: "High", assessment: "UPS B2 is online with acceptable runtime, but it shares the B-side exposure with UPS B1, PDU B, and Row B thermal issues.", evidence: ["Runtime is 10.9 min", "Capacity is 69%", "B-side cluster has attention items"], actions: ["Confirm load sharing with UPS B1", "Verify static bypass path", "Review B-side maintenance plan", "Confirm battery test record"], consequence: "B-side issues should be evaluated together rather than asset-by-asset." },
+        PDUA: { title: "PDU A is normal", confidence: "Medium", assessment: "PDU A load and temperature are within expected range. AI would reconcile branch circuit data and rack loads.", evidence: ["Capacity is 58%", "No active alarm is shown", "Temperature is 29 C"], actions: ["Check branch circuit utilization", "Confirm rack load mapping", "Validate PDU metering calibration", "Compare PDU total with UPS output"], consequence: "PDU data quality affects capacity planning and customer deployment approvals." },
+        RACKA: { title: "IT Row A is normal", confidence: "Medium", assessment: "IT Row A has acceptable supply and return temperatures. AI would monitor rack-level hotspots and power density growth.", evidence: ["Supply temperature 24 C", "Return temperature 34 C", "IT load 61%"], actions: ["Check top-of-rack temperature variance", "Compare rack load against planned capacity", "Verify blanking panel and airflow controls", "Review deployment pipeline"], consequence: "Row-level normal status can hide individual rack hotspots if rack sensors are not modeled." },
+        PDUB: { title: "PDU B requires load-balance follow-up", confidence: "High", assessment: "PDU B is operating at higher capacity and has a phase imbalance alarm. Combined with Row B thermal attention, this should be reviewed before adding load or starting maintenance.", evidence: ["Capacity is 76%", "Phase B load imbalance is 9%", "Row B has elevated return temperature"], actions: ["Review phase loading by panel and branch circuit", "Balance new deployments across phases", "Compare PDU data with rack inventory", "Confirm alarm threshold and trend"], consequence: "PDU imbalance can reduce usable capacity and increase risk during transfer or UPS maintenance." },
+        RACKB: { title: "IT Row B shows combined power and cooling stress", confidence: "High", assessment: "Row B has elevated return temperature and higher IT load. AI links this to PDU B and CRAH loop attention, suggesting a system-level issue rather than a single sensor issue.", evidence: ["Return temperature is 41 C", "IT load is 74%", "CRAH loop has airflow attention", "PDU B has phase imbalance"], actions: ["Inspect airflow containment near Row B", "Review rack power density", "Check CRAH fan speed and valve position", "Defer new deployments until thermal margin improves", "Validate stale thermal sensor list in BMS"], consequence: "Thermal and electrical issues can compound. A row that is acceptable during normal operation may become vulnerable during cooling maintenance or loss of redundancy." },
+        CHW: { title: "Chilled water plant is healthy", confidence: "Medium", assessment: "The chilled water plant has N+1 availability and normal supply/return temperatures. AI would verify plant capacity against current and projected IT load.", evidence: ["Supply/return is 44 F / 56 F", "Capacity is 58%", "No active alarm is shown"], actions: ["Check chiller staging", "Confirm pump redundancy", "Trend approach temperature", "Model N-1 cooling capacity"], consequence: "Cooling plant capacity should be evaluated against IT deployment pipeline, not just current load." },
+        CRAH: { title: "CRAH loop needs airflow balance review", confidence: "High", assessment: "The CRAH loop shows attention and Row B has elevated return temperature. AI correlates these as a likely cooling distribution issue.", evidence: ["Delta-T is 17 F", "Airflow balance attention near Row B", "Row B return temperature is elevated"], actions: ["Check CRAH fan speeds", "Inspect containment and tile/duct configuration", "Review chilled water valve positions", "Validate thermal sensors near Row B", "Confirm cooling redundancy before maintenance"], consequence: "Cooling imbalance can create localized hotspots even when total cooling plant capacity looks adequate." },
+        BMS: { title: "BMS / EPMS is online; data quality issue should be resolved", confidence: "High", assessment: "Monitoring platform is online with high data quality, but one stale Row B thermal sensor matters because Row B already shows thermal attention.", evidence: ["Data quality is 98%", "One stale Row B thermal sensor", "Row B has elevated return temperature"], actions: ["Identify stale sensor location", "Confirm whether sensor is used in alarming", "Check BMS-to-DCIM data path", "Add stale-point alert to operations dashboard"], consequence: "A stale sensor during a thermal event can delay diagnosis or create false confidence." },
+        NETCORE: { title: "Network core is healthy", confidence: "Medium", assessment: "Network core is online with redundant links. AI would verify that BMS, EPMS, DCIM, and customer network dependencies are understood separately.", evidence: ["Redundant links are noted", "No active alarm is shown", "Port utilization is 44%"], actions: ["Confirm management network redundancy", "Verify telemetry paths for BMS/EPMS/DCIM", "Review out-of-band access", "Check UPS-backed power path"], consequence: "Network health affects observability. A healthy power system can still be hard to operate if monitoring network dependencies are unclear." }
+      };
+
+      var metricOrder = [
+        ["Status", "status"], ["Voltage", "voltage"], ["Current", "current"], ["Power", "power"],
+        ["Capacity", "capacity"], ["Temperature", "temperature"], ["Runtime", "runtime"], ["Comms", "comms"]
+      ];
+
+      function escapeHtml(value) {
+        return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
+      }
+
+      function getElement(id) { return document.getElementById(id); }
+
+      function confidenceClass(confidence) {
+        if (confidence === "High") return "risk-low";
+        if (confidence === "Medium") return "risk-medium";
+        return "risk-high";
+      }
+
+      function renderMetrics(asset) {
+        var html = "";
+        for (var i = 0; i < metricOrder.length; i += 1) {
+          var label = metricOrder[i][0];
+          var key = metricOrder[i][1];
+          html += '<div class="metric"><div class="metric-label">' + escapeHtml(label) + '</div><div class="metric-value">' + escapeHtml(asset[key]) + '</div></div>';
+        }
+        getElement("metrics").innerHTML = html;
+      }
+
+      function renderList(id, items, tagName) {
+        var html = "";
+        for (var i = 0; i < items.length; i += 1) {
+          html += "<" + tagName + ">" + escapeHtml(items[i]) + "</" + tagName + ">";
+        }
+        getElement(id).innerHTML = html;
+      }
+
+      function setSelected(id) {
+        var asset = assetData[id];
+        var insight = aiInsights[id];
+        if (!asset || !insight) return;
+
+        var selectedItems = document.querySelectorAll(".selected");
+        for (var i = 0; i < selectedItems.length; i += 1) selectedItems[i].classList.remove("selected");
+
+        var group = document.querySelector('[data-id="' + id + '"]');
+        if (group) group.classList.add("selected");
+
+        getElement("asset-name").textContent = asset.name;
+        getElement("asset-type").textContent = asset.type;
+
+        var riskBadge = getElement("risk-badge");
+        riskBadge.textContent = asset.risk + " Risk";
+        riskBadge.className = "badge risk-" + asset.risk.toLowerCase();
+
+        renderMetrics(asset);
+        renderList("alarms", asset.alarms, "div");
+        var alarmNodes = getElement("alarms").children;
+        for (var j = 0; j < alarmNodes.length; j += 1) alarmNodes[j].className = "alarm";
+
+        getElement("owner-box").innerHTML = "<strong>Data owner:</strong> " + escapeHtml(asset.owner);
+        getElement("last-update").textContent = "Last update: simulated live data - " + (Math.floor(Math.random() * 5) + 1) + " seconds ago";
+
+        getElement("ai-title").textContent = insight.title;
+        var conf = getElement("ai-confidence");
+        conf.textContent = insight.confidence + " Confidence";
+        conf.className = "badge " + confidenceClass(insight.confidence);
+        getElement("ai-assessment").textContent = insight.assessment;
+        renderList("ai-evidence", insight.evidence, "li");
+        renderList("ai-actions", insight.actions, "li");
+        getElement("ai-consequence").textContent = insight.consequence;
+        getElement("ai-answer").textContent = "Try asking about downtime risk, capacity, alarms, maintenance, ownership, or why this asset has its risk level.";
+      }
+
+      function getCurrentSelectedId() {
+        var selected = document.querySelector(".selected");
+        if (selected && selected.getAttribute("data-id")) return selected.getAttribute("data-id");
+        return "UTILA";
+      }
+
+      function answerQuestion() {
+        var selected = getCurrentSelectedId();
+        var asset = assetData[selected];
+        var insight = aiInsights[selected];
+        var q = getElement("ai-question").value.toLowerCase();
+        var answer = "This demo uses rule-based AI-style responses. In a production data center twin, this would call a governed AI service with citations to BMS, EPMS, DCIM, MOPs, CMMS tickets, alarm history, and equipment test records.";
+
+        if (!asset || !insight) return;
+
+        if (q.indexOf("downtime") >= 0 || q.indexOf("incident") >= 0 || q.indexOf("fail") >= 0) {
+          answer = asset.name + ": downtime risk is mainly around loss of redundancy, unproven transfer sequence, stale telemetry, or unresolved alarms. Recommended focus: " + insight.actions.slice(0, 3).join("; ") + ". Consequence: " + insight.consequence;
+        } else if (q.indexOf("capacity") >= 0 || q.indexOf("load") >= 0) {
+          answer = asset.name + ": current capacity indicator is " + asset.capacity + ". AI would compare this to peer assets, redundancy state, projected IT deployments, and maintenance constraints.";
+        } else if (q.indexOf("alarm") >= 0) {
+          answer = asset.name + ": current alarms/notes are " + asset.alarms.join("; ") + ". AI would verify alarm source, alarm routing, threshold basis, and whether the alarm affects a current MOP.";
+        } else if (q.indexOf("maint") >= 0 || q.indexOf("mop") >= 0) {
+          answer = asset.name + ": before maintenance, verify topology, redundancy, load transfer path, monitoring source, rollback steps, and owner approval. First recommended checks: " + insight.actions.slice(0, 4).join("; ") + ".";
+        } else if (q.indexOf("owner") >= 0 || q.indexOf("ownership") >= 0) {
+          answer = asset.name + ": current data owner is " + asset.owner + ". AI would still require interface ownership across facilities, controls, IT, network, security, and vendor support.";
+        } else if (q.indexOf("risk") >= 0 || q.indexOf("why") >= 0) {
+          answer = asset.name + ": risk is " + asset.risk + ". AI assessment: " + insight.assessment;
+        }
+
+        getElement("ai-answer").textContent = answer;
+      }
+
+      function runSelfTests() {
+        var requiredIds = Object.keys(assetData);
+        var missing = [];
+        for (var i = 0; i < requiredIds.length; i += 1) {
+          var id = requiredIds[i];
+          if (!document.querySelector('[data-id="' + id + '"]')) missing.push(id + " has no SVG object");
+          if (!aiInsights[id]) missing.push(id + " has no AI insight");
+        }
+        setSelected("UPSB1");
+        var upsOk = getElement("asset-name").textContent === "UPS B1";
+        setSelected("UTILA");
+        var utilOk = getElement("asset-name").textContent === "Utility Feed A";
+        if (!upsOk) missing.push("UPSB1 selection test failed");
+        if (!utilOk) missing.push("UTILA selection test failed");
+
+        var status = getElement("test-status");
+        if (missing.length === 0) {
+          status.textContent = "Self-tests passed: all assets have SVG objects, AI insights, and working selection behavior.";
+          status.style.color = "#166534";
+          status.style.background = "#dcfce7";
+          status.style.borderColor = "#bbf7d0";
+        } else {
+          status.textContent = "Self-tests found issues: " + missing.join("; ");
+          status.style.color = "#991b1b";
+          status.style.background = "#fee2e2";
+          status.style.borderColor = "#fecaca";
+        }
+      }
+
+      function init() {
+        var clickableItems = document.querySelectorAll("[data-id]");
+        for (var i = 0; i < clickableItems.length; i += 1) {
+          clickableItems[i].addEventListener("click", function (event) {
+            var id = event.currentTarget.getAttribute("data-id");
+            setSelected(id);
+          });
+        }
+
+        getElement("ai-ask-button").addEventListener("click", answerQuestion);
+        getElement("ai-question").addEventListener("keydown", function (event) {
+          if (event.key === "Enter") answerQuestion();
+        });
+
+        setSelected("UTILA");
+        runSelfTests();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+      } else {
+        init();
+      }
+    }());
+  </script>
+</body>
+</html>

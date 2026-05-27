@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HVDC Plant Digital Twin Demo</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --yellow: #ca8a04;
+      --red: #dc2626;
+      --line: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+    .container { max-width: 1520px; margin: 0 auto; }
+    header { margin-bottom: 24px; }
+    .eyebrow { color: var(--blue); font-weight: 800; font-size: 14px; margin: 0 0 6px; }
+    h1 { font-size: 34px; line-height: 1.1; margin: 0; }
+    h2 { font-size: 22px; margin: 0; }
+    h3 { margin: 0; }
+    .subtitle { color: var(--muted); max-width: 1040px; line-height: 1.5; margin-top: 10px; }
+    .grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(390px, 1fr); gap: 24px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05); padding: 20px; }
+    .card-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+    .small { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 12px; height: 12px; border-radius: 999px; display: inline-block; }
+    svg { width: 100%; height: 760px; background: #f8fafc; border: 1px solid var(--border); border-radius: 18px; }
+    .clickable { cursor: pointer; }
+    .clickable:hover text { fill: var(--blue); font-weight: 800; }
+    .selected .select-stroke { stroke: var(--blue) !important; stroke-width: 12 !important; }
+    .selected .select-fill { stroke: var(--blue) !important; stroke-width: 4 !important; fill: #dbeafe !important; }
+    .panel-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+    .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 10px; font-size: 13px; border: 1px solid; white-space: nowrap; font-weight: 800; }
+    .risk-low { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .risk-medium { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+    .risk-high { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+    .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .metric { background: #f8fafc; border: 1px solid var(--border); border-radius: 14px; padding: 12px; min-height: 72px; }
+    .metric-label { color: var(--muted); font-size: 12px; }
+    .metric-value { font-weight: 800; margin-top: 6px; }
+    .section { margin-top: 22px; }
+    .alarm-list { display: grid; gap: 8px; margin-top: 10px; }
+    .alarm { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 10px; font-size: 14px; }
+    .owner-box { margin-top: 16px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px; border-radius: 14px; font-size: 14px; }
+    .ai-panel { border-top: 1px solid var(--border); padding-top: 18px; }
+    .ai-header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+    .ai-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-top: 10px; font-size: 14px; }
+    .ai-box p { margin: 6px 0 0; color: #334155; line-height: 1.45; }
+    .ai-box ul, .ai-box ol { margin: 8px 0 0; padding-left: 20px; color: #334155; line-height: 1.45; }
+    .ai-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 800; }
+    .consequence { background: #fff7ed; border-color: #fed7aa; }
+    .ask-ai { margin-top: 14px; display: grid; gap: 8px; }
+    .ask-ai label { font-size: 13px; font-weight: 800; color: #334155; }
+    .ask-ai input { border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px; font-size: 14px; outline: none; }
+    .ask-ai input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #dbeafe; }
+    .ask-ai button { border: 0; border-radius: 12px; background: var(--blue); color: white; padding: 10px 12px; font-weight: 800; cursor: pointer; }
+    .ai-answer { margin-top: 10px; background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; border-radius: 14px; padding: 12px; font-size: 14px; line-height: 1.45; }
+    .footer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+    .info-card { background: #ffffff; border: 1px solid var(--border); border-radius: 18px; padding: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
+    .info-card p { color: var(--muted); font-size: 14px; line-height: 1.45; margin-bottom: 0; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; border-bottom: 1px solid var(--border); padding: 10px 8px; vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .test-status { margin-top: 16px; font-size: 13px; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px; }
+    @media (max-width: 1150px) { .grid { grid-template-columns: 1fr; } .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 720px) { body { padding: 14px; } h1 { font-size: 26px; } .footer-grid { grid-template-columns: 1fr; } .metrics { grid-template-columns: 1fr; } svg { height: 580px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <p class="eyebrow">HVDC Plant Digital Twin Prototype</p>
+      <h1>Clickable HVDC Converter Station and Cable System Twin</h1>
+      <p class="subtitle">This standalone demo models an HVDC plant similar in structure to CHPE: AC grid interconnection, converter transformers, valve hall, DC yard, long underground/underwater cable, controls/protection, cooling, auxiliaries, and AI execution-risk assessment. Values are simulated and should be treated as demo data.</p>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Interactive HVDC One-Line / Systems Map</h2>
+            <p class="small">Click any AC, DC, converter, cable, cooling, or control object to view status.</p>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="dot" style="background:#16a34a"></span>Normal / In service</span>
+            <span class="legend-item"><span class="dot" style="background:#ca8a04"></span>Attention</span>
+            <span class="legend-item"><span class="dot" style="background:#dc2626"></span>Alarm</span>
+          </div>
+        </div>
+
+        <svg viewBox="0 0 1160 800" aria-label="Interactive HVDC converter station digital twin diagram">
+          <!-- AC Grid -->
+          <g class="clickable device selected" data-id="ACGRID">
+            <rect class="select-fill" x="50" y="70" width="150" height="64" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="125" y="97" text-anchor="middle" font-size="13">NY AC Grid</text>
+            <text x="125" y="118" text-anchor="middle" font-size="11" fill="#64748b">345 kV POI</text>
+            <circle cx="185" cy="84" r="7" fill="#16a34a" />
+          </g>
+          <line x1="200" y1="102" x2="285" y2="102" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable breaker" data-id="ACBRK">
+            <rect class="select-fill" x="285" y="82" width="46" height="40" rx="7" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="294" y1="115" x2="322" y2="89" stroke="#16a34a" stroke-width="4" />
+            <text x="308" y="145" text-anchor="middle" font-size="12">AC CB</text>
+          </g>
+          <line x1="331" y1="102" x2="420" y2="102" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable bus" data-id="ACBUS">
+            <line class="select-stroke" x1="420" y1="102" x2="620" y2="102" stroke="#111827" stroke-width="8" stroke-linecap="round" />
+            <text x="520" y="80" text-anchor="middle" font-size="14">AC Switchyard Bus</text>
+            <circle cx="638" cy="102" r="7" fill="#16a34a" />
+          </g>
+
+          <!-- Filters and reactors -->
+          <line x1="470" y1="102" x2="470" y2="190" stroke="#334155" stroke-width="4" />
+          <g class="clickable device" data-id="FILTERS">
+            <rect class="select-fill" x="395" y="190" width="150" height="58" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="470" y="214" text-anchor="middle" font-size="13">AC Filters</text>
+            <text x="470" y="233" text-anchor="middle" font-size="11" fill="#64748b">Harmonic / Q</text>
+            <circle cx="530" cy="203" r="7" fill="#16a34a" />
+          </g>
+
+          <line x1="580" y1="102" x2="700" y2="102" stroke="#334155" stroke-width="4" />
+          <g class="clickable device" data-id="REACTOR">
+            <path class="select-fill" d="M700 102 c10 -22 30 -22 40 0 c10 22 30 22 40 0 c10 -22 30 -22 40 0" fill="none" stroke="#334155" stroke-width="3" />
+            <text x="760" y="145" text-anchor="middle" font-size="12">Phase Reactor</text>
+            <circle cx="825" cy="88" r="7" fill="#16a34a" />
+          </g>
+          <line x1="820" y1="102" x2="900" y2="102" stroke="#334155" stroke-width="4" />
+
+          <!-- Converter transformer and valve hall -->
+          <g class="clickable transformer" data-id="CVT">
+            <circle class="select-fill" cx="930" cy="88" r="25" fill="white" stroke="#334155" stroke-width="2" />
+            <circle class="select-fill" cx="960" cy="116" r="25" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="945" y="160" text-anchor="middle" font-size="12">Converter XFMR</text>
+            <circle cx="985" cy="78" r="7" fill="#ca8a04" />
+          </g>
+          <line x1="985" y1="102" x2="1035" y2="102" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable device" data-id="VALVE">
+            <rect class="select-fill" x="1035" y="55" width="100" height="95" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="1085" y="88" text-anchor="middle" font-size="13">VSC</text>
+            <text x="1085" y="108" text-anchor="middle" font-size="11" fill="#64748b">Valve Hall</text>
+            <text x="1085" y="128" text-anchor="middle" font-size="11" fill="#64748b">+/- DC</text>
+            <circle cx="1120" cy="68" r="7" fill="#16a34a" />
+          </g>
+
+          <!-- DC bus / yard -->
+          <line x1="1085" y1="150" x2="1085" y2="225" stroke="#334155" stroke-width="4" />
+          <g class="clickable bus" data-id="DCBUS">
+            <line class="select-stroke" x1="855" y1="225" x2="1125" y2="225" stroke="#111827" stroke-width="8" stroke-linecap="round" />
+            <text x="990" y="205" text-anchor="middle" font-size="14">DC Pole Bus / Yard</text>
+            <circle cx="1140" cy="225" r="7" fill="#16a34a" />
+          </g>
+
+          <line x1="880" y1="225" x2="880" y2="300" stroke="#334155" stroke-width="4" />
+          <g class="clickable device" data-id="SMOOTH">
+            <path class="select-fill" d="M840 300 c8 -18 24 -18 32 0 c8 18 24 18 32 0 c8 -18 24 -18 32 0" fill="none" stroke="#334155" stroke-width="3" />
+            <text x="888" y="335" text-anchor="middle" font-size="12">DC Reactor</text>
+            <circle cx="940" cy="286" r="7" fill="#16a34a" />
+          </g>
+
+          <line x1="1020" y1="225" x2="1020" y2="300" stroke="#334155" stroke-width="4" />
+          <g class="clickable device" data-id="DCSW">
+            <rect class="select-fill" x="990" y="300" width="60" height="42" rx="8" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="1002" y1="333" x2="1038" y2="309" stroke="#16a34a" stroke-width="4" />
+            <text x="1020" y="366" text-anchor="middle" font-size="12">DC Switch</text>
+          </g>
+
+          <!-- Cable corridor -->
+          <line x1="1020" y1="342" x2="1020" y2="410" stroke="#334155" stroke-width="4" />
+          <g class="clickable device" data-id="CABLE_NY">
+            <rect class="select-fill" x="700" y="410" width="390" height="70" rx="18" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="895" y="438" text-anchor="middle" font-size="14">Underground / Underwater HVDC Cable</text>
+            <text x="895" y="459" text-anchor="middle" font-size="11" fill="#64748b">Route sections, joints, thermal limits, fiber monitoring</text>
+            <circle cx="1070" cy="424" r="7" fill="#ca8a04" />
+          </g>
+
+          <line x1="700" y1="445" x2="590" y2="445" stroke="#334155" stroke-width="4" />
+          <g class="clickable device" data-id="REMOTE">
+            <rect class="select-fill" x="420" y="410" width="170" height="70" rx="18" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="505" y="438" text-anchor="middle" font-size="14">Remote Converter</text>
+            <text x="505" y="459" text-anchor="middle" font-size="11" fill="#64748b">Sending-end station</text>
+            <circle cx="570" cy="424" r="7" fill="#16a34a" />
+          </g>
+
+          <!-- Controls and protection -->
+          <g class="clickable device" data-id="CTRL">
+            <rect class="select-fill" x="70" y="340" width="185" height="64" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="162" y="366" text-anchor="middle" font-size="13">HVDC Controls</text>
+            <text x="162" y="386" text-anchor="middle" font-size="11" fill="#64748b">Power / voltage modes</text>
+            <circle cx="235" cy="353" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable device" data-id="PROT">
+            <rect class="select-fill" x="70" y="430" width="185" height="64" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="162" y="456" text-anchor="middle" font-size="13">Protection / RAS</text>
+            <text x="162" y="476" text-anchor="middle" font-size="11" fill="#64748b">AC/DC trips, runback</text>
+            <circle cx="235" cy="443" r="7" fill="#ca8a04" />
+          </g>
+
+          <g class="clickable device" data-id="TELECOM">
+            <rect class="select-fill" x="70" y="520" width="185" height="64" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="162" y="546" text-anchor="middle" font-size="13">Telecom / Fiber</text>
+            <text x="162" y="566" text-anchor="middle" font-size="11" fill="#64748b">Station-to-station</text>
+            <circle cx="235" cy="533" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable device" data-id="COOLING">
+            <rect class="select-fill" x="330" y="610" width="185" height="64" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="422" y="636" text-anchor="middle" font-size="13">Valve Cooling</text>
+            <text x="422" y="656" text-anchor="middle" font-size="11" fill="#64748b">Pumps / HX / DI water</text>
+            <circle cx="495" cy="623" r="7" fill="#ca8a04" />
+          </g>
+
+          <g class="clickable device" data-id="AUX">
+            <rect class="select-fill" x="565" y="610" width="185" height="64" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="657" y="636" text-anchor="middle" font-size="13">Aux AC / DC</text>
+            <text x="657" y="656" text-anchor="middle" font-size="11" fill="#64748b">UPS, batteries, MCC</text>
+            <circle cx="730" cy="623" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable device" data-id="MONITOR">
+            <rect class="select-fill" x="800" y="610" width="220" height="64" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="910" y="636" text-anchor="middle" font-size="13">Digital Monitoring</text>
+            <text x="910" y="656" text-anchor="middle" font-size="11" fill="#64748b">DTS, DGA, PD, SOE, historian</text>
+            <circle cx="1000" cy="623" r="7" fill="#16a34a" />
+          </g>
+
+          <!-- visual dependencies -->
+          <line x1="255" y1="372" x2="1035" y2="102" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+          <line x1="255" y1="462" x2="1035" y2="225" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+          <line x1="255" y1="552" x2="505" y2="410" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+          <line x1="422" y1="610" x2="1085" y2="150" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+        </svg>
+      </section>
+
+      <aside class="card" id="asset-panel">
+        <div class="panel-top">
+          <div>
+            <p class="small" style="margin:0">Selected Asset</p>
+            <h2 id="asset-name">NY AC Grid</h2>
+            <p class="small" id="asset-type">AC Interconnection</p>
+          </div>
+          <span id="risk-badge" class="badge risk-low">Low Risk</span>
+        </div>
+        <div class="metrics" id="metrics"></div>
+        <div class="section">
+          <h3>Active Alarms / Notes</h3>
+          <div class="alarm-list" id="alarms"></div>
+        </div>
+        <div class="owner-box" id="owner-box"><strong>Data owner:</strong> Grid Operations</div>
+        <p class="small" id="last-update">Last update: simulated live data</p>
+
+        <div class="section ai-panel">
+          <div class="ai-header">
+            <div>
+              <p class="eyebrow" style="margin:0">AI HVDC Execution Assistant</p>
+              <h3 id="ai-title">Asset assessment</h3>
+            </div>
+            <span id="ai-confidence" class="badge risk-medium">Medium Confidence</span>
+          </div>
+          <div class="ai-box"><div class="ai-label">Assessment</div><p id="ai-assessment"></p></div>
+          <div class="ai-box"><div class="ai-label">Evidence Used</div><ul id="ai-evidence"></ul></div>
+          <div class="ai-box"><div class="ai-label">Recommended Next Checks</div><ol id="ai-actions"></ol></div>
+          <div class="ai-box consequence"><div class="ai-label">Execution / Operations Consequence</div><p id="ai-consequence"></p></div>
+          <div class="ask-ai">
+            <label for="ai-question">Ask the twin</label>
+            <input id="ai-question" type="text" placeholder="Example: What could block energization or reduce transfer?" />
+            <button id="ai-ask-button" type="button">Ask</button>
+          </div>
+          <div id="ai-answer" class="ai-answer">Try asking about transfer risk, energization, alarms, controls, cable thermal limits, or ownership.</div>
+        </div>
+      </aside>
+    </main>
+
+    <section class="card" style="margin-top:24px">
+      <h2>HVDC Digital Twin Readiness / Execution Risk Checks</h2>
+      <p class="small">A useful HVDC twin should expose gaps before they become energization blockers, control-mode surprises, cable thermal restrictions, forced runbacks, or unclear AC/DC interface responsibilities.</p>
+      <div class="table-wrap" style="margin-top:14px">
+        <table>
+          <thead><tr><th>ID</th><th>Category</th><th>Issue</th><th>Consequence</th><th>Severity</th></tr></thead>
+          <tbody>
+            <tr><td>HVDC-001</td><td>Completeness</td><td>DC cable thermal model not tied to real-time soil/water/route segment limits</td><td>Transfer capability may be overstated or conservatively restricted</td><td>High</td></tr>
+            <tr><td>HVDC-002</td><td>Interface</td><td>Runback and AC grid reactive-power responsibilities require explicit owner mapping</td><td>Control-room confusion during contingencies</td><td>High</td></tr>
+            <tr><td>HVDC-003</td><td>Commissioning</td><td>Protection/RAS trip matrix is visible but not linked to end-to-end test evidence</td><td>FAT/SAT or energization test loop likely</td><td>High</td></tr>
+            <tr><td>HVDC-004</td><td>Execution</td><td>Valve cooling alert is not cross-linked to transfer capability derating logic</td><td>Operators may miss early derating or forced-block risk</td><td>Medium</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="test-status" id="test-status">Self-tests not run yet.</div>
+    </section>
+
+    <section class="footer-grid">
+      <div class="info-card"><h3>Operations</h3><p>Operators click the actual AC/DC object and see transfer status, control mode, alarms, source systems, and operating limits.</p></div>
+      <div class="info-card"><h3>Engineering</h3><p>Engineers compare AC studies, converter limits, cable ratings, protection logic, cooling capacity, and owner boundaries against the design basis.</p></div>
+      <div class="info-card"><h3>Commissioning</h3><p>FAT/SAT teams validate control modes, runback, blocking/deblocking, trip matrices, telecom dependencies, and cable monitoring before commercial operation.</p></div>
+      <div class="info-card"><h3>Manager Value</h3><p>Reduces vendor/utility clarification loops, avoids late control-room surprises, and exposes issues the engineering team should not be discovering during energization.</p></div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var assetData = {
+        ACGRID: { name: "NY AC Grid", type: "AC Interconnection", status: "In service", voltage: "345 kV", current: "2,090 A", power: "1,240 MW", mode: "Import to AC grid", temp: "N/A", limit: "1,250 MW schedule", alarms: ["None"], comms: "Healthy", owner: "Grid Operations", risk: "Low" },
+        ACBRK: { name: "AC Intertie Breaker", type: "345 kV Circuit Breaker", status: "Closed", voltage: "345 kV", current: "2,090 A", power: "1,240 MW", mode: "Remote enabled", temp: "41 C", limit: "Breaker normal", alarms: ["Trip circuit supervision normal"], comms: "Healthy", owner: "AC Switchyard", risk: "Low" },
+        ACBUS: { name: "AC Switchyard Bus", type: "345 kV Bus", status: "Energized", voltage: "345 kV", current: "2,090 A", power: "1,240 MW", mode: "Grid following", temp: "N/A", limit: "Voltage within band", alarms: ["None"], comms: "Healthy", owner: "AC Switchyard", risk: "Low" },
+        FILTERS: { name: "AC Filters / Reactive Support", type: "Filter Bank", status: "Available", voltage: "345 kV", current: "310 A", power: "+180 Mvar", mode: "Auto reactive support", temp: "38 C", limit: "2 banks available", alarms: ["None"], comms: "Healthy", owner: "HVDC Controls / AC Planning", risk: "Low" },
+        REACTOR: { name: "Converter Phase Reactor", type: "AC Reactor", status: "In service", voltage: "345 kV", current: "2,090 A", power: "1,240 MW", mode: "Normal", temp: "68 C winding", limit: "Thermal normal", alarms: ["None"], comms: "Healthy", owner: "Converter OEM", risk: "Low" },
+        CVT: { name: "Converter Transformer", type: "Converter Transformer", status: "Attention", voltage: "345 kV / valve side", current: "2,090 A", power: "1,240 MW", mode: "Normal tap control", temp: "84 C winding", limit: "Thermal margin narrowing", alarms: ["Cooling stage 2 active"], comms: "Healthy", owner: "Substation Engineering / OEM", risk: "Medium" },
+        VALVE: { name: "VSC Valve Hall", type: "Voltage Source Converter", status: "Deblocked", voltage: "+/- 320 kV DC", current: "1.94 kA DC", power: "1,240 MW", mode: "Power control", temp: "Valve cooling 39 C", limit: "98% transfer", alarms: ["No valve trip"], comms: "Healthy", owner: "HVDC OEM / Operations", risk: "Low" },
+        DCBUS: { name: "DC Pole Bus / Yard", type: "DC Yard", status: "Energized", voltage: "+/- 320 kV DC", current: "1.94 kA", power: "1,240 MW", mode: "Bipole normal", temp: "N/A", limit: "Insulation monitoring normal", alarms: ["None"], comms: "Healthy", owner: "HVDC Operations", risk: "Low" },
+        SMOOTH: { name: "DC Smoothing Reactor", type: "DC Reactor", status: "In service", voltage: "+/- 320 kV DC", current: "1.94 kA", power: "1,240 MW", mode: "Normal", temp: "73 C winding", limit: "Thermal normal", alarms: ["None"], comms: "Healthy", owner: "HVDC OEM", risk: "Low" },
+        DCSW: { name: "DC Disconnect / Switch", type: "DC Switching Device", status: "Closed", voltage: "+/- 320 kV DC", current: "1.94 kA", power: "1,240 MW", mode: "Remote status only", temp: "N/A", limit: "Not load-break rated", alarms: ["Position confirmed"], comms: "Healthy", owner: "HVDC Operations", risk: "Low" },
+        CABLE_NY: { name: "HVDC Cable System", type: "Underground / Underwater DC Cable", status: "Attention", voltage: "+/- 320 kV DC", current: "1.94 kA", power: "1,240 MW", mode: "Thermal monitoring active", temp: "Route hotspot 72 C", limit: "Segment 47 at 96% thermal", alarms: ["Cable thermal segment near limit"], comms: "Healthy", owner: "Transmission Asset Management", risk: "Medium" },
+        REMOTE: { name: "Remote Sending-End Converter", type: "Remote HVDC Station", status: "In service", voltage: "+/- 320 kV DC", current: "1.94 kA", power: "1,240 MW", mode: "Coordinated power order", temp: "Normal", limit: "Remote station available", alarms: ["None"], comms: "Healthy", owner: "Remote Operator / HVDC Control", risk: "Low" },
+        CTRL: { name: "HVDC Control System", type: "Control and Automation", status: "Online", voltage: "N/A", current: "N/A", power: "1,240 MW order", mode: "Power control / voltage support", temp: "Control room normal", limit: "Primary and backup available", alarms: ["No controller failover"], comms: "Healthy", owner: "HVDC Controls", risk: "Low" },
+        PROT: { name: "Protection / RAS", type: "AC/DC Protection and Remedial Action", status: "Attention", voltage: "N/A", current: "N/A", power: "Runback armed", mode: "Trip/runback matrix active", temp: "N/A", limit: "Test evidence incomplete", alarms: ["RAS test evidence pending for two scenarios"], comms: "Healthy", owner: "Protection / System Operations", risk: "Medium" },
+        TELECOM: { name: "Telecom / Fiber System", type: "Station-to-Station Communications", status: "Healthy", voltage: "N/A", current: "N/A", power: "N/A", mode: "Redundant paths", temp: "N/A", limit: "Latency normal", alarms: ["No path alarm"], comms: "Healthy", owner: "Telecom / OT Network", risk: "Low" },
+        COOLING: { name: "Valve Cooling System", type: "DI Water Cooling", status: "Attention", voltage: "480 V aux", current: "220 A", power: "145 kW", mode: "Pump A lead / Pump B standby", temp: "Conductivity rising", limit: "DI water quality attention", alarms: ["Conductivity trend above watch level"], comms: "Healthy", owner: "HVDC OEM / Mechanical", risk: "Medium" },
+        AUX: { name: "Auxiliary AC/DC System", type: "Station Service, UPS, Batteries", status: "Normal", voltage: "480 V / 125 Vdc", current: "610 A aux", power: "410 kW", mode: "UPS normal", temp: "Battery room 23 C", limit: "8 hr DC autonomy", alarms: ["None"], comms: "Healthy", owner: "Station Service", risk: "Low" },
+        MONITOR: { name: "Digital Monitoring / Historian", type: "DTS, DGA, PD, SOE, Historian", status: "Online", voltage: "N/A", current: "N/A", power: "N/A", mode: "Streaming data", temp: "N/A", limit: "97% data quality", alarms: ["One DTS segment stale for 3 min"], comms: "Healthy", owner: "Asset Monitoring / OT", risk: "Low" }
+      };
+
+      var aiInsights = {
+        ACGRID: { title: "AC grid interface is healthy; validate reactive and runback coordination", confidence: "Medium", assessment: "The AC interconnection is carrying near full scheduled import. The AI risk is less about present load and more about AC voltage support, reactive responsibility, and runback behavior during grid contingencies.", evidence: ["Power is 1,240 MW", "Voltage is 345 kV", "No active AC grid alarm"], actions: ["Confirm voltage/reactive operating mode", "Verify runback triggers and operator notifications", "Check POI metering source and settlement tags", "Confirm current schedule against transfer limit"], consequence: "If AC/HVDC operating responsibilities are unclear, a contingency can create control-room hesitation and delayed corrective action." },
+        ACBRK: { title: "AC breaker is normal; trip paths must be evidence-linked", confidence: "High", assessment: "The breaker is closed and carries the intertie. AI would verify trip circuit supervision, breaker failure, protection trip outputs, and SOE timing.", evidence: ["Breaker is closed", "Trip circuit supervision normal", "Carries 2,090 A"], actions: ["Verify 52a/52b status paths", "Confirm breaker failure logic", "Link trip commands to protection matrix", "Confirm SOE timestamp source"], consequence: "The breaker can look normal on the one-line while a missing trip/status path creates energization or SAT rework." },
+        ACBUS: { title: "AC bus is normal; source traceability should be confirmed", confidence: "Medium", assessment: "The AC bus is energized. AI would verify voltage source, scaling, time sync, and historian mapping for event reconstruction.", evidence: ["Bus voltage is 345 kV", "No active alarm", "Healthy communications"], actions: ["Confirm PT source and scaling", "Verify historian and EMS mapping", "Check SOE time sync", "Include voltage alarm tests in SAT"], consequence: "Weak telemetry traceability forces engineering clarification during events and commissioning." },
+        FILTERS: { title: "Filter banks are available; switching and reactive logic should be proven", confidence: "High", assessment: "Reactive support is available and in auto mode. AI would check filter switching sequence, lockouts, harmonic alarms, and AC voltage control interaction.", evidence: ["Reactive support shown as +180 Mvar", "Two banks available", "No alarm"], actions: ["Confirm filter status points", "Test auto/manual switching logic", "Verify harmonic overload alarms", "Confirm reactive dispatch ownership"], consequence: "Filter/control gaps can cause AC voltage excursions or operator confusion during power order changes." },
+        REACTOR: { title: "Phase reactor is healthy", confidence: "Medium", assessment: "The reactor is in service with normal temperature. AI would trend temperature against current and ambient conditions.", evidence: ["Reactor current matches transfer", "Winding temperature is 68 C", "No active alarm"], actions: ["Trend winding temperature", "Verify temperature alarm thresholds", "Confirm spare/repair strategy", "Check thermal limits in overload cases"], consequence: "Reactor thermal data matters most during overload or abnormal voltage operating modes." },
+        CVT: { title: "Converter transformer needs thermal follow-up", confidence: "High", assessment: "The converter transformer is operating near full transfer and has cooling stage 2 active. This is an advisory derating/maintenance risk, not an immediate trip condition in the demo.", evidence: ["Power is 1,240 MW", "Winding temperature is 84 C", "Cooling stage 2 active", "Risk is Medium"], actions: ["Compare winding temperature against ambient", "Verify cooler status and alarms", "Check tap control behavior", "Confirm overload and derating logic", "Add transformer thermal trend review before extended full-power operation"], consequence: "If transformer thermal margin is misunderstood, operators may assume full availability while the station is closer to derating during high transfer." },
+        VALVE: { title: "Valve hall is deblocked and stable", confidence: "High", assessment: "The VSC is operating in power control mode with no valve trip. AI would verify valve cooling, submodule alarms, control redundancy, and power order tracking.", evidence: ["Valve is deblocked", "Power is 1,240 MW", "No valve trip", "Cooling temperature shown"], actions: ["Check submodule alarm summary", "Verify primary/backup control availability", "Correlate valve temperature with cooling data", "Confirm block/deblock test evidence"], consequence: "Valve issues usually become high-consequence quickly; the twin should show early-warning trends before a forced block." },
+        DCBUS: { title: "DC yard is energized; insulation and grounding status should remain visible", confidence: "High", assessment: "The DC bus is energized and insulation monitoring is normal. AI would track pole voltage balance, ground current, arrester counters, and disconnect status.", evidence: ["DC voltage is +/- 320 kV", "Bipole normal", "Insulation monitoring normal"], actions: ["Check pole voltage balance", "Verify DC ground current limits", "Review arrester/counter data", "Confirm disconnect positions"], consequence: "DC yard ambiguity can delay fault localization and safe isolation." },
+        SMOOTH: { title: "DC smoothing reactor is normal", confidence: "Medium", assessment: "The reactor is in service with normal thermal indication. AI would compare current and temperature against route transfer and ambient profile.", evidence: ["Current is 1.94 kA", "Temperature is 73 C", "No alarm"], actions: ["Trend winding temperature", "Verify temperature alarm mapping", "Check current ripple alarms", "Confirm maintenance access constraints"], consequence: "The reactor is a long-lead asset; condition visibility supports outage planning." },
+        DCSW: { title: "DC switch position is confirmed; operating limits must be clear", confidence: "High", assessment: "The DC switch is closed and position is confirmed. The demo flags that it is not load-break rated, so operating instructions and interlocks must be explicit.", evidence: ["Switch is closed", "Position confirmed", "Limit says not load-break rated"], actions: ["Verify interlocks prevent unsafe operation", "Link switching device to MOP steps", "Confirm local/remote status indication", "Confirm isolation procedure"], consequence: "Unclear DC switching rules can create severe safety and equipment risk during outages." },
+        CABLE_NY: { title: "Cable system is near a thermal segment limit", confidence: "High", assessment: "The cable is carrying high transfer with one route segment near thermal limit. AI should correlate DTS data, route conditions, load history, and allowable emergency ratings.", evidence: ["Power is 1,240 MW", "Route hotspot is 72 C", "Segment 47 at 96% thermal", "Cable thermal alarm is active"], actions: ["Validate DTS segment health", "Confirm route thermal model inputs", "Check whether emergency rating is permitted", "Review transfer schedule against hotspot trend", "Confirm cable alarm owner and response procedure"], consequence: "Cable thermal uncertainty can directly reduce transfer capability or create avoidable derating during high-value import periods." },
+        REMOTE: { title: "Remote converter is coordinated; station-to-station assumptions should be visible", confidence: "Medium", assessment: "The remote station is in service and coordinated. AI would verify station-to-station power order, control hierarchy, telecom path, and remote alarms.", evidence: ["Remote station is in service", "Coordinated power order", "No remote alarm"], actions: ["Confirm remote alarm sharing", "Verify power order ownership", "Check telecom redundancy", "Review remote-end maintenance constraints"], consequence: "A local-only twin misses high-impact remote-end dependencies that can block transfer." },
+        CTRL: { title: "HVDC controls are online; mode ownership should be explicit", confidence: "High", assessment: "Controls are online with primary and backup available. AI would verify whether active mode, limits, runbacks, and operator authority are unambiguous.", evidence: ["Controls online", "Power control mode", "Primary and backup available"], actions: ["Confirm active control mode", "Verify backup controller health", "Map runback logic to operating procedures", "Confirm control-room authority split"], consequence: "HVDC control-mode ambiguity is a classic commissioning and operations risk." },
+        PROT: { title: "Protection/RAS needs test-evidence closure", confidence: "High", assessment: "Protection/RAS is armed but two scenario tests are pending. AI treats this as execution risk because HVDC trip/runback behavior must be proven end-to-end.", evidence: ["Runback armed", "Trip/runback matrix active", "RAS test evidence pending for two scenarios"], actions: ["Close pending RAS test evidence", "Verify AC contingency runback sequence", "Confirm DC fault trip/block logic", "Link trip matrix to relay/controller files", "Confirm operator alarm text"], consequence: "Incomplete RAS evidence can block energization milestones or create repeat FAT/SAT cycles." },
+        TELECOM: { title: "Telecom is healthy; loss-of-path behavior should be modeled", confidence: "Medium", assessment: "Telecom paths are healthy. AI would verify latency, path redundancy, channel alarms, and what the converter does on loss of remote communication.", evidence: ["Redundant paths", "Latency normal", "No path alarm"], actions: ["Verify loss-of-telecom control behavior", "Confirm channel alarm routing", "Check time sync dependency", "Review remote station failover path"], consequence: "Telecom failure modes can create unexpected runback, block, or control-mode transfer if not explicitly modeled." },
+        COOLING: { title: "Valve cooling trend needs attention", confidence: "High", assessment: "Valve cooling is operating but DI water conductivity is trending above watch level. AI would connect this to potential converter derating or forced block risk if the trend worsens.", evidence: ["Conductivity trend above watch level", "Pump A lead / Pump B standby", "Valve is currently deblocked"], actions: ["Check DI resin/skid status", "Verify pump B auto-start readiness", "Trend conductivity against alarm limits", "Confirm cooling derating/block thresholds", "Review spare parts and maintenance window"], consequence: "Cooling issues may not affect transfer immediately, but they can rapidly become converter derating or forced-block events." },
+        AUX: { title: "Auxiliary systems are normal", confidence: "Medium", assessment: "Station service, UPS, and DC supply are normal. AI would verify redundancy, battery autonomy, and critical load mapping.", evidence: ["UPS normal", "Battery room 23 C", "8 hr DC autonomy"], actions: ["Verify DC battery test record", "Confirm UPS bypass status", "Map critical converter loads", "Check loss-of-aux sequence"], consequence: "Auxiliary supply gaps can disable otherwise healthy HVDC equipment." },
+        MONITOR: { title: "Monitoring is online; stale DTS segment should be corrected", confidence: "High", assessment: "Monitoring data quality is generally good, but a stale DTS segment matters because cable thermal limits are already near attention level.", evidence: ["97% data quality", "One DTS segment stale for 3 min", "Cable segment near thermal limit"], actions: ["Identify stale DTS segment location", "Confirm whether stale segment affects hotspot calculation", "Check historian latency", "Add stale-data alarm to operator display"], consequence: "A cable thermal alarm is only useful if route-segment data is fresh and trusted." }
+      };
+
+      var metricOrder = [["Status", "status"], ["Voltage", "voltage"], ["Current", "current"], ["Power", "power"], ["Mode", "mode"], ["Temperature", "temp"], ["Limit", "limit"], ["Comms", "comms"]];
+
+      function escapeHtml(value) { return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;"); }
+      function getElement(id) { return document.getElementById(id); }
+      function confidenceClass(confidence) { if (confidence === "High") return "risk-low"; if (confidence === "Medium") return "risk-medium"; return "risk-high"; }
+      function renderMetrics(asset) {
+        var html = "";
+        for (var i = 0; i < metricOrder.length; i += 1) {
+          var label = metricOrder[i][0]; var key = metricOrder[i][1];
+          html += '<div class="metric"><div class="metric-label">' + escapeHtml(label) + '</div><div class="metric-value">' + escapeHtml(asset[key]) + '</div></div>';
+        }
+        getElement("metrics").innerHTML = html;
+      }
+      function renderList(id, items, tagName) {
+        var html = "";
+        for (var i = 0; i < items.length; i += 1) html += "<" + tagName + ">" + escapeHtml(items[i]) + "</" + tagName + ">";
+        getElement(id).innerHTML = html;
+      }
+      function setSelected(id) {
+        var asset = assetData[id]; var insight = aiInsights[id];
+        if (!asset || !insight) return;
+        var selectedItems = document.querySelectorAll(".selected");
+        for (var i = 0; i < selectedItems.length; i += 1) selectedItems[i].classList.remove("selected");
+        var group = document.querySelector('[data-id="' + id + '"]');
+        if (group) group.classList.add("selected");
+        getElement("asset-name").textContent = asset.name;
+        getElement("asset-type").textContent = asset.type;
+        var riskBadge = getElement("risk-badge");
+        riskBadge.textContent = asset.risk + " Risk";
+        riskBadge.className = "badge risk-" + asset.risk.toLowerCase();
+        renderMetrics(asset);
+        renderList("alarms", asset.alarms, "div");
+        var alarmNodes = getElement("alarms").children;
+        for (var j = 0; j < alarmNodes.length; j += 1) alarmNodes[j].className = "alarm";
+        getElement("owner-box").innerHTML = "<strong>Data owner:</strong> " + escapeHtml(asset.owner);
+        getElement("last-update").textContent = "Last update: simulated live data - " + (Math.floor(Math.random() * 5) + 1) + " seconds ago";
+        getElement("ai-title").textContent = insight.title;
+        var conf = getElement("ai-confidence");
+        conf.textContent = insight.confidence + " Confidence";
+        conf.className = "badge " + confidenceClass(insight.confidence);
+        getElement("ai-assessment").textContent = insight.assessment;
+        renderList("ai-evidence", insight.evidence, "li");
+        renderList("ai-actions", insight.actions, "li");
+        getElement("ai-consequence").textContent = insight.consequence;
+        getElement("ai-answer").textContent = "Try asking about transfer risk, energization, alarms, controls, cable thermal limits, or ownership.";
+      }
+      function getCurrentSelectedId() {
+        var selected = document.querySelector(".selected");
+        if (selected && selected.getAttribute("data-id")) return selected.getAttribute("data-id");
+        return "ACGRID";
+      }
+      function answerQuestion() {
+        var selected = getCurrentSelectedId();
+        var asset = assetData[selected]; var insight = aiInsights[selected];
+        var q = getElement("ai-question").value.toLowerCase();
+        var answer = "This demo uses rule-based AI-style responses. In a production HVDC twin, this would call a governed AI service with citations to EMS/SCADA, controller logs, protection files, DTS/cable monitoring, OEM data, switching orders, and commissioning evidence.";
+        if (!asset || !insight) return;
+        if (q.indexOf("transfer") >= 0 || q.indexOf("mw") >= 0 || q.indexOf("limit") >= 0) {
+          answer = asset.name + ": current transfer context is " + asset.power + " with limit/status " + asset.limit + ". AI would compare operating order, thermal limits, reactive support, cooling status, and AC/DC contingencies.";
+        } else if (q.indexOf("energ") >= 0 || q.indexOf("commission") >= 0 || q.indexOf("sat") >= 0) {
+          answer = asset.name + ": energization/commissioning risk is mainly around proving control mode, trip/runback paths, telecom dependencies, and operator displays. Recommended focus: " + insight.actions.slice(0, 4).join("; ") + ".";
+        } else if (q.indexOf("alarm") >= 0) {
+          answer = asset.name + ": current alarms/notes are " + asset.alarms.join("; ") + ". AI would verify source system, alarm priority, response owner, and whether alarm text matches operating procedures.";
+        } else if (q.indexOf("control") >= 0 || q.indexOf("runback") >= 0 || q.indexOf("block") >= 0) {
+          answer = asset.name + ": control-related review should verify active mode, fallback mode, block/deblock behavior, runback triggers, and authority split between local, remote, and grid operators.";
+        } else if (q.indexOf("cable") >= 0 || q.indexOf("thermal") >= 0 || q.indexOf("dts") >= 0) {
+          answer = asset.name + ": cable/thermal review should verify DTS freshness, route segment limits, emergency ratings, and whether stale data could affect transfer capability decisions.";
+        } else if (q.indexOf("owner") >= 0 || q.indexOf("ownership") >= 0) {
+          answer = asset.name + ": current data owner is " + asset.owner + ". AI would still require explicit ownership for controls, protection, telecom, OEM, asset monitoring, and grid-operator response.";
+        } else if (q.indexOf("risk") >= 0 || q.indexOf("why") >= 0) {
+          answer = asset.name + ": risk is " + asset.risk + ". AI assessment: " + insight.assessment;
+        }
+        getElement("ai-answer").textContent = answer;
+      }
+      function runSelfTests() {
+        var requiredIds = Object.keys(assetData); var missing = [];
+        for (var i = 0; i < requiredIds.length; i += 1) {
+          var id = requiredIds[i];
+          if (!document.querySelector('[data-id="' + id + '"]')) missing.push(id + " has no SVG object");
+          if (!aiInsights[id]) missing.push(id + " has no AI insight");
+        }
+        setSelected("CABLE_NY");
+        var cableOk = getElement("asset-name").textContent === "HVDC Cable System";
+        setSelected("ACGRID");
+        var gridOk = getElement("asset-name").textContent === "NY AC Grid";
+        if (!cableOk) missing.push("CABLE_NY selection test failed");
+        if (!gridOk) missing.push("ACGRID selection test failed");
+        var status = getElement("test-status");
+        if (missing.length === 0) {
+          status.textContent = "Self-tests passed: all assets have SVG objects, AI insights, and working selection behavior.";
+          status.style.color = "#166534"; status.style.background = "#dcfce7"; status.style.borderColor = "#bbf7d0";
+        } else {
+          status.textContent = "Self-tests found issues: " + missing.join("; ");
+          status.style.color = "#991b1b"; status.style.background = "#fee2e2"; status.style.borderColor = "#fecaca";
+        }
+      }
+      function init() {
+        var clickableItems = document.querySelectorAll("[data-id]");
+        for (var i = 0; i < clickableItems.length; i += 1) {
+          clickableItems[i].addEventListener("click", function (event) { setSelected(event.currentTarget.getAttribute("data-id")); });
+        }
+        getElement("ai-ask-button").addEventListener("click", answerQuestion);
+        getElement("ai-question").addEventListener("keydown", function (event) { if (event.key === "Enter") answerQuestion(); });
+        setSelected("ACGRID");
+        runSelfTests();
+      }
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+    }());
+  </script>
+</body>
+</html>

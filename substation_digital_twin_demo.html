@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Substation Digital Twin Demo</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #334155;
+      --border: #e2e8f0;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --red: #dc2626;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+
+    .container { max-width: 1440px; margin: 0 auto; }
+    header { margin-bottom: 24px; }
+    .eyebrow { color: var(--blue); font-weight: 700; font-size: 14px; margin: 0 0 6px; }
+    h1 { font-size: 34px; line-height: 1.1; margin: 0; }
+    h2 { font-size: 22px; margin: 0; }
+    h3 { margin: 0; }
+    .subtitle { color: var(--muted); max-width: 920px; line-height: 1.5; margin-top: 10px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(360px, 1fr);
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+      padding: 20px;
+    }
+
+    .card-header { display: flex; justify-content: space-between; gap: 16px; align-items: start; margin-bottom: 16px; }
+    .small { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 12px; height: 12px; border-radius: 999px; display: inline-block; }
+
+    svg {
+      width: 100%;
+      height: 650px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+
+    .clickable { cursor: pointer; }
+    .clickable:hover text { fill: var(--blue); font-weight: 700; }
+    .selected .select-stroke { stroke: var(--blue) !important; stroke-width: 12 !important; }
+    .selected .select-fill { stroke: var(--blue) !important; stroke-width: 4 !important; fill: #dbeafe !important; }
+
+    .panel-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+    .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 10px; font-size: 13px; border: 1px solid; white-space: nowrap; font-weight: 700; }
+    .risk-low { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .risk-medium { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+    .risk-high { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+
+    .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .metric { background: #f8fafc; border: 1px solid var(--border); border-radius: 14px; padding: 12px; min-height: 72px; }
+    .metric-label { color: var(--muted); font-size: 12px; }
+    .metric-value { font-weight: 800; margin-top: 6px; }
+    .section { margin-top: 22px; }
+    .alarm-list { display: grid; gap: 8px; margin-top: 10px; }
+    .alarm { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 10px; font-size: 14px; }
+
+    .owner-box { margin-top: 16px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px; border-radius: 14px; font-size: 14px; }
+    .ai-panel { border-top: 1px solid var(--border); padding-top: 18px; }
+    .ai-header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+    .ai-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-top: 10px; font-size: 14px; }
+    .ai-box p { margin: 6px 0 0; color: #334155; line-height: 1.45; }
+    .ai-box ul, .ai-box ol { margin: 8px 0 0; padding-left: 20px; color: #334155; line-height: 1.45; }
+    .ai-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 800; }
+    .consequence { background: #fff7ed; border-color: #fed7aa; }
+    .ask-ai { margin-top: 14px; display: grid; gap: 8px; }
+    .ask-ai label { font-size: 13px; font-weight: 800; color: #334155; }
+    .ask-ai input { border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px; font-size: 14px; outline: none; }
+    .ask-ai input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #dbeafe; }
+    .ask-ai button { border: 0; border-radius: 12px; background: var(--blue); color: white; padding: 10px 12px; font-weight: 800; cursor: pointer; }
+    .ai-answer { margin-top: 10px; background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; border-radius: 14px; padding: 12px; font-size: 14px; line-height: 1.45; }
+
+    .footer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+    .info-card { background: #ffffff; border: 1px solid var(--border); border-radius: 18px; padding: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
+    .info-card p { color: var(--muted); font-size: 14px; line-height: 1.45; margin-bottom: 0; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; border-bottom: 1px solid var(--border); padding: 10px 8px; vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .test-status { margin-top: 16px; font-size: 13px; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px; }
+
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 14px; }
+      h1 { font-size: 26px; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: 1fr; }
+      svg { height: 520px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <p class="eyebrow">Substation Digital Twin Prototype</p>
+      <h1>Clickable Single-Line Diagram with Live Equipment Status</h1>
+      <p class="subtitle">This standalone demo shows a practical digital twin pattern: the single-line diagram becomes the navigation layer, and each bus or device exposes simulated live telemetry, alarms, ownership, AI assessment, and execution-risk context.</p>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Interactive Single-Line Diagram</h2>
+            <p class="small">Click any bus or equipment symbol to view status.</p>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="dot" style="background:#16a34a"></span>Energized / Closed</span>
+            <span class="legend-item"><span class="dot" style="background:#64748b"></span>Open</span>
+            <span class="legend-item"><span class="dot" style="background:#dc2626"></span>Alarm</span>
+          </div>
+        </div>
+
+        <svg viewBox="0 0 1000 650" aria-label="Interactive single line diagram">
+          <line x1="170" y1="55" x2="170" y2="125" stroke="#334155" stroke-width="4" />
+          <line x1="370" y1="55" x2="370" y2="125" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable device" data-id="LINE1">
+            <circle class="select-fill" cx="170" cy="55" r="24" fill="white" stroke="#334155" stroke-width="2"/>
+            <text x="170" y="59" text-anchor="middle" font-size="12">L1</text>
+            <circle cx="195" cy="35" r="6" fill="#16a34a"/>
+            <text x="170" y="24" text-anchor="middle" font-size="12">Line L1</text>
+          </g>
+
+          <g class="clickable device" data-id="LINE2">
+            <circle class="select-fill" cx="370" cy="55" r="24" fill="white" stroke="#334155" stroke-width="2"/>
+            <text x="370" y="59" text-anchor="middle" font-size="12">L2</text>
+            <circle cx="395" cy="35" r="6" fill="#16a34a"/>
+            <text x="370" y="24" text-anchor="middle" font-size="12">Line L2</text>
+          </g>
+
+          <g class="clickable breaker" data-id="CB101">
+            <rect class="select-fill" x="152" y="127" width="36" height="36" rx="6" fill="white" stroke="#334155" stroke-width="2"/>
+            <line x1="159" y1="156" x2="181" y2="134" stroke="#16a34a" stroke-width="4"/>
+            <text x="170" y="198" text-anchor="middle" font-size="12">CB-101</text>
+          </g>
+
+          <g class="clickable breaker" data-id="CB102">
+            <rect class="select-fill" x="352" y="127" width="36" height="36" rx="6" fill="white" stroke="#334155" stroke-width="2"/>
+            <line x1="359" y1="156" x2="381" y2="134" stroke="#16a34a" stroke-width="4"/>
+            <text x="370" y="198" text-anchor="middle" font-size="12">CB-102</text>
+          </g>
+
+          <line x1="170" y1="163" x2="170" y2="230" stroke="#334155" stroke-width="4" />
+          <line x1="370" y1="163" x2="370" y2="230" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable bus selected" data-id="BUS115">
+            <line class="select-stroke" x1="100" y1="230" x2="700" y2="230" stroke="#111827" stroke-width="8" stroke-linecap="round"/>
+            <text x="400" y="207" text-anchor="middle" font-size="15">115 kV Main Bus</text>
+            <circle cx="720" cy="230" r="7" fill="#16a34a" />
+          </g>
+          <text x="735" y="236" font-size="12" fill="#475569">115 kV</text>
+
+          <line x1="520" y1="230" x2="520" y2="290" stroke="#334155" stroke-width="4" />
+          <g class="clickable breaker" data-id="CB201">
+            <rect class="select-fill" x="502" y="297" width="36" height="36" rx="6" fill="white" stroke="#334155" stroke-width="2"/>
+            <line x1="509" y1="326" x2="531" y2="304" stroke="#16a34a" stroke-width="4"/>
+            <text x="520" y="354" text-anchor="middle" font-size="12">CB-201</text>
+          </g>
+
+          <line x1="520" y1="333" x2="520" y2="372" stroke="#334155" stroke-width="4" />
+          <g class="clickable transformer" data-id="TX1">
+            <circle class="select-fill" cx="520" cy="400" r="25" fill="white" stroke="#334155" stroke-width="2"/>
+            <circle class="select-fill" cx="520" cy="430" r="25" fill="white" stroke="#334155" stroke-width="2"/>
+            <text x="520" y="478" text-anchor="middle" font-size="12">T1 115/13.8 kV</text>
+          </g>
+          <line x1="520" y1="455" x2="520" y2="515" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable bus" data-id="BUS138">
+            <line class="select-stroke" x1="240" y1="515" x2="800" y2="515" stroke="#111827" stroke-width="8" stroke-linecap="round"/>
+            <text x="520" y="493" text-anchor="middle" font-size="15">13.8 kV Bus</text>
+            <circle cx="820" cy="515" r="7" fill="#16a34a" />
+          </g>
+          <text x="840" y="521" font-size="12" fill="#475569">13.8 kV</text>
+
+          <line x1="320" y1="515" x2="320" y2="560" stroke="#334155" stroke-width="4" />
+          <line x1="520" y1="515" x2="520" y2="560" stroke="#334155" stroke-width="4" />
+          <line x1="700" y1="515" x2="700" y2="560" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable breaker" data-id="CB301">
+            <rect class="select-fill" x="302" y="570" width="36" height="36" rx="6" fill="white" stroke="#334155" stroke-width="2"/>
+            <line x1="309" y1="599" x2="331" y2="577" stroke="#16a34a" stroke-width="4"/>
+            <text x="320" y="630" text-anchor="middle" font-size="12">Feeder F1</text>
+          </g>
+
+          <g class="clickable breaker" data-id="CB302">
+            <rect class="select-fill" x="502" y="570" width="36" height="36" rx="6" fill="white" stroke="#334155" stroke-width="2"/>
+            <line x1="509" y1="599" x2="531" y2="577" stroke="#16a34a" stroke-width="4"/>
+            <text x="520" y="630" text-anchor="middle" font-size="12">Feeder F2</text>
+          </g>
+
+          <g class="clickable device" data-id="CAP1">
+            <circle class="select-fill" cx="700" cy="588" r="23" fill="white" stroke="#334155" stroke-width="2"/>
+            <text x="700" y="592" text-anchor="middle" font-size="11">CAP</text>
+            <circle cx="725" cy="568" r="6" fill="#16a34a"/>
+            <text x="700" y="630" text-anchor="middle" font-size="12">Cap Bank</text>
+          </g>
+        </svg>
+      </section>
+
+      <aside class="card" id="asset-panel">
+        <div class="panel-top">
+          <div>
+            <p class="small" style="margin:0">Selected Asset</p>
+            <h2 id="asset-name">115 kV Main Bus</h2>
+            <p class="small" id="asset-type">Bus</p>
+          </div>
+          <span id="risk-badge" class="badge risk-low">Low Risk</span>
+        </div>
+        <div class="metrics" id="metrics"></div>
+        <div class="section">
+          <h3>Active Alarms / Notes</h3>
+          <div class="alarm-list" id="alarms"></div>
+        </div>
+        <div class="owner-box" id="owner-box"><strong>Data owner:</strong> Substation Engineering</div>
+        <p class="small" id="last-update">Last update: simulated live data</p>
+
+        <div class="section ai-panel">
+          <div class="ai-header">
+            <div>
+              <p class="eyebrow" style="margin:0">AI Execution Assistant</p>
+              <h3 id="ai-title">Asset assessment</h3>
+            </div>
+            <span id="ai-confidence" class="badge risk-medium">Medium Confidence</span>
+          </div>
+          <div class="ai-box"><div class="ai-label">Assessment</div><p id="ai-assessment"></p></div>
+          <div class="ai-box"><div class="ai-label">Evidence Used</div><ul id="ai-evidence"></ul></div>
+          <div class="ai-box"><div class="ai-label">Recommended Next Checks</div><ol id="ai-actions"></ol></div>
+          <div class="ai-box consequence"><div class="ai-label">Execution / Commissioning Consequence</div><p id="ai-consequence"></p></div>
+          <div class="ask-ai">
+            <label for="ai-question">Ask the twin</label>
+            <input id="ai-question" type="text" placeholder="Example: What could fail during SAT for this asset?" />
+            <button id="ai-ask-button" type="button">Ask</button>
+          </div>
+          <div id="ai-answer" class="ai-answer">Try asking about SAT risk, missing data, alarms, or ownership.</div>
+        </div>
+      </aside>
+    </main>
+
+    <section class="card" style="margin-top:24px">
+      <h2>Digital Twin Readiness / Execution Risk Checks</h2>
+      <p class="small">A useful substation twin should expose gaps before they become review comments, RFIs, FAT defects, or SAT delays.</p>
+      <div class="table-wrap" style="margin-top:14px">
+        <table>
+          <thead><tr><th>ID</th><th>Category</th><th>Issue</th><th>Consequence</th><th>Severity</th></tr></thead>
+          <tbody>
+            <tr><td>CHK-001</td><td>Completeness</td><td>SCADA point list missing source IED for 7 alarms</td><td>Point-to-point testing will stall during SAT</td><td>High</td></tr>
+            <tr><td>CHK-002</td><td>Consistency</td><td>CT ratio in relay setting file does not match SLD</td><td>Protection review comment or incorrect metering/scaling</td><td>High</td></tr>
+            <tr><td>CHK-003</td><td>Interface</td><td>GOOSE publisher/subscriber ownership not defined</td><td>Vendor clarification loop during FAT</td><td>Medium</td></tr>
+            <tr><td>CHK-004</td><td>Commissioning</td><td>Breaker failure trip path modeled but not test-scripted</td><td>Logic may pass design review but fail during end-to-end testing</td><td>High</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="test-status" id="test-status">Self-tests not run yet.</div>
+    </section>
+
+    <section class="footer-grid">
+      <div class="info-card"><h3>Operations</h3><p>Operators click the actual one-line object and see live state instead of searching point lists.</p></div>
+      <div class="info-card"><h3>Engineering</h3><p>Engineers compare equipment status, ratings, settings, and ownership against the design basis.</p></div>
+      <div class="info-card"><h3>Commissioning</h3><p>Test teams verify breaker status, analogs, alarms, trip paths, and communication dependencies.</p></div>
+      <div class="info-card"><h3>Manager Value</h3><p>Reduces review churn and avoids making engineers reconstruct station intent from scattered documents.</p></div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var assetData = {
+        BUS115: { name: "115 kV Main Bus", type: "Bus", status: "Energized", voltage: "116.8 kV", current: "640 A", mw: "118.4 MW", mvar: "22.1 MVAR", temperature: "N/A", frequency: "60.01 Hz", alarms: ["None"], comms: "Healthy", owner: "Substation Engineering", risk: "Low" },
+        BUS138: { name: "13.8 kV Bus", type: "Bus", status: "Energized", voltage: "13.92 kV", current: "2,860 A", mw: "62.3 MW", mvar: "10.4 MVAR", temperature: "N/A", frequency: "60.01 Hz", alarms: ["None"], comms: "Healthy", owner: "Distribution Operations", risk: "Low" },
+        LINE1: { name: "115 kV Line Terminal L1", type: "Transmission Line", status: "In Service", voltage: "116.7 kV", current: "390 A", mw: "71.8 MW", mvar: "13.2 MVAR", temperature: "N/A", frequency: "60.01 Hz", alarms: ["Carrier channel normal"], comms: "Healthy", owner: "Transmission", risk: "Low" },
+        LINE2: { name: "115 kV Line Terminal L2", type: "Transmission Line", status: "In Service", voltage: "116.9 kV", current: "250 A", mw: "46.6 MW", mvar: "8.9 MVAR", temperature: "N/A", frequency: "60.01 Hz", alarms: ["None"], comms: "Healthy", owner: "Transmission", risk: "Low" },
+        CB101: { name: "Breaker CB-101", type: "115 kV Circuit Breaker", status: "Closed", voltage: "116.7 kV", current: "390 A", mw: "71.8 MW", mvar: "13.2 MVAR", temperature: "42 C", frequency: "60.01 Hz", alarms: ["None"], comms: "Healthy", owner: "Protection & Control", risk: "Low" },
+        CB102: { name: "Breaker CB-102", type: "115 kV Circuit Breaker", status: "Closed", voltage: "116.9 kV", current: "250 A", mw: "46.6 MW", mvar: "8.9 MVAR", temperature: "44 C", frequency: "60.01 Hz", alarms: ["SF6 density normal"], comms: "Healthy", owner: "Protection & Control", risk: "Low" },
+        CB201: { name: "Transformer High-Side Breaker CB-201", type: "115 kV Circuit Breaker", status: "Closed", voltage: "116.8 kV", current: "640 A", mw: "118.4 MW", mvar: "22.1 MVAR", temperature: "46 C", frequency: "60.01 Hz", alarms: ["Close spring charged"], comms: "Healthy", owner: "Protection & Control", risk: "Low" },
+        TX1: { name: "Transformer T1", type: "115/13.8 kV Power Transformer", status: "In Service", voltage: "116.8 / 13.92 kV", current: "640 A / 2,860 A", mw: "62.3 MW", mvar: "10.4 MVAR", temperature: "72 C top oil", frequency: "60.01 Hz", alarms: ["Cooling stage 1 active"], comms: "Healthy", owner: "Substation Engineering", risk: "Medium" },
+        CB301: { name: "Feeder Breaker F1", type: "13.8 kV Feeder Breaker", status: "Closed", voltage: "13.91 kV", current: "760 A", mw: "18.2 MW", mvar: "3.1 MVAR", temperature: "39 C", frequency: "60.01 Hz", alarms: ["None"], comms: "Healthy", owner: "Distribution Protection", risk: "Low" },
+        CB302: { name: "Feeder Breaker F2", type: "13.8 kV Feeder Breaker", status: "Closed", voltage: "13.93 kV", current: "690 A", mw: "16.4 MW", mvar: "2.8 MVAR", temperature: "41 C", frequency: "60.01 Hz", alarms: ["None"], comms: "Healthy", owner: "Distribution Protection", risk: "Low" },
+        CAP1: { name: "Capacitor Bank CAP-1", type: "13.8 kV Capacitor Bank", status: "Connected", voltage: "13.92 kV", current: "310 A", mw: "0.0 MW", mvar: "-7.2 MVAR", temperature: "36 C", frequency: "60.01 Hz", alarms: ["Neutral current normal"], comms: "Healthy", owner: "Substation Engineering", risk: "Low" }
+      };
+
+      var aiInsights = {
+        BUS115: { title: "115 kV bus model is usable, but source traceability should be confirmed", confidence: "Medium", assessment: "The bus is energized and telemetry appears normal. The AI risk is not driven by operating condition; it is driven by whether bus voltage, frequency, and SOE timestamps are traceable to confirmed IED sources.", evidence: ["Bus is energized at 116.8 kV", "No active alarms are shown", "Owner is Substation Engineering, but source IED is not displayed in this demo"], actions: ["Confirm PT/VT source and scaling basis", "Verify bus voltage appears in SCADA and historian", "Confirm SOE timestamp source and time-sync dependency", "Include bus undervoltage/overvoltage alarm checks in SAT"], consequence: "If source traceability is missing, review may pass visually but commissioning will force point-source clarification. The engineering team should not be reconstructing this during SAT." },
+        BUS138: { title: "Distribution bus telemetry looks normal; validate feeder aggregation", confidence: "Medium", assessment: "The 13.8 kV bus appears healthy. AI would compare bus current and total feeder/capacitor data to detect metering mismatch or scaling errors.", evidence: ["Bus voltage is 13.92 kV", "Current is 2,860 A", "No active bus alarm is shown"], actions: ["Compare bus MW/MVAR against feeder totals", "Verify capacitor bank MVAR sign convention", "Confirm bus voltage source is included in SAT point-to-point test"], consequence: "Unreconciled feeder totals create review comments and can undermine operator trust in the twin." },
+        LINE1: { title: "Line terminal is normal; pilot/channel evidence should be linked", confidence: "High", assessment: "The line is in service and carrier channel status is normal. The AI would confirm protection channel status, relay targets, and line terminal data are all tied to the same asset object.", evidence: ["Line current is 390 A", "Carrier channel normal note is present", "No line alarm is active"], actions: ["Link line relay targets to this object", "Confirm pilot channel alarm points", "Verify remote-end dependency documentation", "Add end-to-end trip test evidence when available"], consequence: "Undefined line protection channel ownership is a common FAT/SAT clarification loop." },
+        LINE2: { title: "Line terminal is normal; remote-end dependencies remain a model gap", confidence: "Medium", assessment: "Operating data is normal, but a good twin should also show remote-end protection and telecom dependencies. Those are not visible in the current model.", evidence: ["Line current is 250 A", "Voltage is normal", "No remote-end dependency is displayed"], actions: ["Add remote terminal asset reference", "Document transfer trip or permissive scheme if applicable", "Confirm telecom path and failure alarm points"], consequence: "A station-only model can miss line/substation interface risk, leading to late protection or telecom comments." },
+        CB101: { title: "Breaker status is healthy; commissioning script should prove all dependencies", confidence: "High", assessment: "CB-101 is closed with no active alarms. AI value comes from verifying that status, control, trip, close, lockout, and SOE evidence are complete.", evidence: ["Breaker is closed", "Current is 390 A", "No active alarms are shown"], actions: ["Verify 52a and 52b indications", "Test local and remote open/close", "Confirm trip coil path from line protection", "Verify SOE timestamp and SCADA status update", "Confirm breaker failure initiate path if applicable"], consequence: "A breaker can appear correct on the SLD but still fail SAT if one control/status path is unmapped or untested." },
+        CB102: { title: "Breaker status is healthy; SF6 and control alarms should be mapped", confidence: "High", assessment: "CB-102 is closed and SF6 density is normal. AI would verify that SF6 density, spring charge, trip circuit supervision, and position alarms are mapped and tested.", evidence: ["Breaker is closed", "SF6 density normal note is present", "No active high-risk alarm is shown"], actions: ["Confirm SF6 alarm thresholds and SCADA mapping", "Verify trip circuit supervision point", "Confirm 52a/52b logic matches control schematic", "Include control-failure alarm in SAT"], consequence: "Missing auxiliary breaker alarms often surface late because the one-line looks complete while the alarm model is incomplete." },
+        CB201: { title: "Transformer breaker is healthy, but high consequence path needs test evidence", confidence: "High", assessment: "CB-201 carries the transformer high-side path. Even with normal status, AI treats it as high consequence because transformer trip, lockout, and breaker failure logic depend on it.", evidence: ["Breaker is closed", "Carries 640 A transformer high-side current", "Close spring charged note is present"], actions: ["Verify transformer differential trip path", "Verify lockout relay interaction", "Test breaker failure initiate and trip outputs", "Confirm SCADA control permissives", "Check that all test steps are in FAT/SAT script"], consequence: "If this breaker logic is incomplete, the issue may pass design review but create field rework or repeated commissioning test cycles." },
+        TX1: { title: "Transformer has medium execution risk due to thermal/monitoring dependency", confidence: "High", assessment: "T1 is in service and loaded normally, but top-oil temperature is elevated enough to justify checking cooling status, alarm mapping, and SAT coverage. This is an advisory finding, not a protection action.", evidence: ["Top-oil temperature is 72 C", "Cooling stage 1 is active", "Transformer is carrying 62.3 MW", "Risk is marked Medium"], actions: ["Verify fan and pump status feedback", "Compare top-oil trend against ambient temperature", "Confirm winding temperature point exists or flag as missing", "Confirm temperature alarm thresholds", "Add transformer thermal alarm checks to SAT script"], consequence: "If transformer thermal points are not mapped and tested, asset-management integration may fail after energization and the engineering department will be pulled into avoidable troubleshooting." },
+        CB301: { title: "Feeder breaker is normal; feeder protection evidence should be tied to object", confidence: "Medium", assessment: "The feeder is closed and loaded. AI would check whether feeder relay settings, CT ratio, SCADA status, and trip test evidence agree.", evidence: ["Feeder current is 760 A", "Feeder MW is 18.2", "No active alarm is shown"], actions: ["Compare relay CT ratio with SLD/equipment list", "Verify feeder trip and close controls", "Confirm feeder target/alarm mapping", "Add feeder load current sanity check"], consequence: "Feeder objects often look simple, but CT ratio and point-mapping errors create quick review churn." },
+        CB302: { title: "Feeder breaker is normal; validate metering consistency", confidence: "Medium", assessment: "CB-302 telemetry is normal. AI would compare feeder values against bus totals and flag scaling or sign convention mismatches.", evidence: ["Feeder current is 690 A", "Feeder MW is 16.4", "No active alarm is shown"], actions: ["Confirm CT/PT scaling", "Verify MW/MVAR sign convention", "Confirm relay metering source", "Include SCADA analog scaling in SAT"], consequence: "Incorrect feeder analog scaling can pass visual review but lead to operator mistrust and post-energization corrections." },
+        CAP1: { title: "Capacitor bank is connected; sign convention and neutral protection need confirmation", confidence: "High", assessment: "CAP-1 is connected and producing reactive support. AI flags capacitor banks for MVAR sign convention, neutral current alarm mapping, and switching interlock validation.", evidence: ["MVAR is shown as -7.2", "Neutral current normal note is present", "Bank is connected"], actions: ["Confirm MVAR sign convention with operations", "Verify neutral current alarm thresholds", "Test capacitor switch status and controls", "Confirm voltage/VAR control interaction if applicable"], consequence: "Capacitor bank data errors commonly create SCADA/operator confusion, especially when MVAR sign convention is inconsistent." }
+      };
+
+      var metricOrder = [
+        ["Status", "status"], ["Voltage", "voltage"], ["Current", "current"], ["MW", "mw"],
+        ["MVAR", "mvar"], ["Temperature", "temperature"], ["Frequency", "frequency"], ["Comms", "comms"]
+      ];
+
+      function escapeHtml(value) {
+        return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
+      }
+
+      function getElement(id) {
+        return document.getElementById(id);
+      }
+
+      function confidenceClass(confidence) {
+        if (confidence === "High") return "risk-low";
+        if (confidence === "Medium") return "risk-medium";
+        return "risk-high";
+      }
+
+      function renderMetrics(asset) {
+        var html = "";
+        for (var i = 0; i < metricOrder.length; i += 1) {
+          var label = metricOrder[i][0];
+          var key = metricOrder[i][1];
+          html += '<div class="metric"><div class="metric-label">' + escapeHtml(label) + '</div><div class="metric-value">' + escapeHtml(asset[key]) + '</div></div>';
+        }
+        getElement("metrics").innerHTML = html;
+      }
+
+      function renderList(id, items, tagName) {
+        var html = "";
+        for (var i = 0; i < items.length; i += 1) {
+          html += "<" + tagName + ">" + escapeHtml(items[i]) + "</" + tagName + ">";
+        }
+        getElement(id).innerHTML = html;
+      }
+
+      function setSelected(id) {
+        var asset = assetData[id];
+        var insight = aiInsights[id];
+        if (!asset || !insight) return;
+
+        var selectedItems = document.querySelectorAll(".selected");
+        for (var i = 0; i < selectedItems.length; i += 1) selectedItems[i].classList.remove("selected");
+
+        var group = document.querySelector('[data-id="' + id + '"]');
+        if (group) group.classList.add("selected");
+
+        getElement("asset-name").textContent = asset.name;
+        getElement("asset-type").textContent = asset.type;
+
+        var riskBadge = getElement("risk-badge");
+        riskBadge.textContent = asset.risk + " Risk";
+        riskBadge.className = "badge risk-" + asset.risk.toLowerCase();
+
+        renderMetrics(asset);
+        renderList("alarms", asset.alarms, "div");
+        var alarmNodes = getElement("alarms").children;
+        for (var j = 0; j < alarmNodes.length; j += 1) alarmNodes[j].className = "alarm";
+
+        getElement("owner-box").innerHTML = "<strong>Data owner:</strong> " + escapeHtml(asset.owner);
+        getElement("last-update").textContent = "Last update: simulated live data - " + (Math.floor(Math.random() * 5) + 1) + " seconds ago";
+
+        getElement("ai-title").textContent = insight.title;
+        var conf = getElement("ai-confidence");
+        conf.textContent = insight.confidence + " Confidence";
+        conf.className = "badge " + confidenceClass(insight.confidence);
+        getElement("ai-assessment").textContent = insight.assessment;
+        renderList("ai-evidence", insight.evidence, "li");
+        renderList("ai-actions", insight.actions, "li");
+        getElement("ai-consequence").textContent = insight.consequence;
+        getElement("ai-answer").textContent = "Try asking about SAT risk, missing data, alarms, ownership, or why this asset has its risk level.";
+      }
+
+      function getCurrentSelectedId() {
+        var selected = document.querySelector(".selected");
+        if (selected && selected.getAttribute("data-id")) return selected.getAttribute("data-id");
+        return "BUS115";
+      }
+
+      function answerQuestion() {
+        var selected = getCurrentSelectedId();
+        var asset = assetData[selected];
+        var insight = aiInsights[selected];
+        var q = getElement("ai-question").value.toLowerCase();
+        var answer = "This demo uses rule-based AI-style responses. In a production twin, this would call a governed AI service with citations to drawings, settings, SCADA points, and test records.";
+
+        if (!asset || !insight) return;
+
+        if (q.indexOf("sat") >= 0 || q.indexOf("commission") >= 0) {
+          answer = asset.name + ": SAT risk is mainly around proving the modeled signal paths. Recommended focus: " + insight.actions.slice(0, 3).join("; ") + ". Consequence: " + insight.consequence;
+        } else if (q.indexOf("missing") >= 0 || q.indexOf("gap") >= 0) {
+          answer = asset.name + ": likely model gaps are source traceability, point mapping, and test evidence. Evidence currently used: " + insight.evidence.join("; ") + ".";
+        } else if (q.indexOf("alarm") >= 0) {
+          answer = asset.name + ": current alarms/notes are " + asset.alarms.join("; ") + ". AI would verify alarm thresholds, source IED, SCADA mapping, and whether the alarm appears in the SAT script.";
+        } else if (q.indexOf("owner") >= 0 || q.indexOf("ownership") >= 0) {
+          answer = asset.name + ": current data owner is " + asset.owner + ". AI would still require interface ownership for source IED, SCADA mapping, telecom dependency, and test evidence.";
+        } else if (q.indexOf("risk") >= 0 || q.indexOf("why") >= 0) {
+          answer = asset.name + ": risk is " + asset.risk + ". AI assessment: " + insight.assessment;
+        }
+
+        getElement("ai-answer").textContent = answer;
+      }
+
+      function runSelfTests() {
+        var requiredIds = Object.keys(assetData);
+        var missing = [];
+        for (var i = 0; i < requiredIds.length; i += 1) {
+          var id = requiredIds[i];
+          if (!document.querySelector('[data-id="' + id + '"]')) missing.push(id + " has no SVG object");
+          if (!aiInsights[id]) missing.push(id + " has no AI insight");
+        }
+        setSelected("TX1");
+        var txNameOk = getElement("asset-name").textContent === "Transformer T1";
+        setSelected("BUS115");
+        var busNameOk = getElement("asset-name").textContent === "115 kV Main Bus";
+        if (!txNameOk) missing.push("TX1 selection test failed");
+        if (!busNameOk) missing.push("BUS115 selection test failed");
+
+        var status = getElement("test-status");
+        if (missing.length === 0) {
+          status.textContent = "Self-tests passed: all assets have SVG objects, AI insights, and working selection behavior.";
+          status.style.color = "#166534";
+          status.style.background = "#dcfce7";
+          status.style.borderColor = "#bbf7d0";
+        } else {
+          status.textContent = "Self-tests found issues: " + missing.join("; ");
+          status.style.color = "#991b1b";
+          status.style.background = "#fee2e2";
+          status.style.borderColor = "#fecaca";
+        }
+      }
+
+      function init() {
+        var clickableItems = document.querySelectorAll("[data-id]");
+        for (var i = 0; i < clickableItems.length; i += 1) {
+          clickableItems[i].addEventListener("click", function (event) {
+            var id = event.currentTarget.getAttribute("data-id");
+            setSelected(id);
+          });
+        }
+
+        getElement("ai-ask-button").addEventListener("click", answerQuestion);
+        getElement("ai-question").addEventListener("keydown", function (event) {
+          if (event.key === "Enter") answerQuestion();
+        });
+
+        setSelected("BUS115");
+        runSelfTests();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+      } else {
+        init();
+      }
+    }());
+  </script>
+</body>
+</html>

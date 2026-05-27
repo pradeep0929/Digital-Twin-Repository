@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medium Voltage Switchgear Digital Twin Demo</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --yellow: #ca8a04;
+      --red: #dc2626;
+      --line: #334155;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+
+    .container { max-width: 1540px; margin: 0 auto; }
+    header { margin-bottom: 24px; }
+    .eyebrow { color: var(--blue); font-weight: 800; font-size: 14px; margin: 0 0 6px; }
+    h1 { font-size: 34px; line-height: 1.1; margin: 0; }
+    h2 { font-size: 22px; margin: 0; }
+    h3 { margin: 0; }
+    .subtitle { color: var(--muted); max-width: 1060px; line-height: 1.5; margin-top: 10px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(410px, 1fr);
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+      padding: 20px;
+    }
+
+    .card-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+    .small { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 12px; height: 12px; border-radius: 999px; display: inline-block; }
+
+    svg {
+      width: 100%;
+      height: 760px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+
+    .clickable { cursor: pointer; }
+    .clickable:hover text { fill: var(--blue); font-weight: 800; }
+    .selected .select-stroke { stroke: var(--blue) !important; stroke-width: 12 !important; }
+    .selected .select-fill { stroke: var(--blue) !important; stroke-width: 4 !important; fill: #dbeafe !important; }
+
+    .panel-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+    .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 10px; font-size: 13px; border: 1px solid; white-space: nowrap; font-weight: 800; }
+    .risk-low { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .risk-medium { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+    .risk-high { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+
+    .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .metric { background: #f8fafc; border: 1px solid var(--border); border-radius: 14px; padding: 12px; min-height: 72px; }
+    .metric-label { color: var(--muted); font-size: 12px; }
+    .metric-value { font-weight: 800; margin-top: 6px; }
+
+    .section { margin-top: 22px; }
+    .alarm-list { display: grid; gap: 8px; margin-top: 10px; }
+    .alarm { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 10px; font-size: 14px; }
+    .owner-box { margin-top: 16px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px; border-radius: 14px; font-size: 14px; }
+
+    .ai-panel { border-top: 1px solid var(--border); padding-top: 18px; }
+    .ai-header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+    .ai-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-top: 10px; font-size: 14px; }
+    .ai-box p { margin: 6px 0 0; color: #334155; line-height: 1.45; }
+    .ai-box ul, .ai-box ol { margin: 8px 0 0; padding-left: 20px; color: #334155; line-height: 1.45; }
+    .ai-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 800; }
+    .consequence { background: #fff7ed; border-color: #fed7aa; }
+
+    .ask-ai { margin-top: 14px; display: grid; gap: 8px; }
+    .ask-ai label { font-size: 13px; font-weight: 800; color: #334155; }
+    .ask-ai input { border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px; font-size: 14px; outline: none; }
+    .ask-ai input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #dbeafe; }
+    .ask-ai button { border: 0; border-radius: 12px; background: var(--blue); color: white; padding: 10px 12px; font-weight: 800; cursor: pointer; }
+    .ai-answer { margin-top: 10px; background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; border-radius: 14px; padding: 12px; font-size: 14px; line-height: 1.45; }
+
+    .footer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+    .info-card { background: #ffffff; border: 1px solid var(--border); border-radius: 18px; padding: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
+    .info-card p { color: var(--muted); font-size: 14px; line-height: 1.45; margin-bottom: 0; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; border-bottom: 1px solid var(--border); padding: 10px 8px; vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .test-status { margin-top: 16px; font-size: 13px; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px; }
+
+    @media (max-width: 1150px) {
+      .grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 14px; }
+      h1 { font-size: 26px; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: 1fr; }
+      svg { height: 600px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <p class="eyebrow">Medium-Voltage Switchgear Digital Twin Prototype</p>
+      <h1>Clickable MV Switchgear Lineup with Breaker, Racking, Protection, Interlock, and Safety Status</h1>
+      <p class="subtitle">This standalone demo models a two-main / one-tie medium-voltage switchgear lineup with two bus sections, feeder cubicles, relay/control panels, control power, arc-flash maintenance mode, grounding/interlock status, and AI safety/commissioning assessment. Values are simulated for demonstration.</p>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Interactive MV Switchgear One-Line / Cubicle Map</h2>
+            <p class="small">Click any source, bus, breaker, feeder, relay, control power, SCADA, or safety/interlock object.</p>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="dot" style="background:#16a34a"></span>Normal / Closed / Available</span>
+            <span class="legend-item"><span class="dot" style="background:#ca8a04"></span>Attention / Abnormal</span>
+            <span class="legend-item"><span class="dot" style="background:#dc2626"></span>Alarm / Unsafe / Trip</span>
+          </div>
+        </div>
+
+        <svg viewBox="0 0 1220 800" aria-label="Interactive medium voltage switchgear digital twin diagram">
+          <!-- Sources -->
+          <g class="clickable device selected" data-id="SRC_A">
+            <rect class="select-fill" x="70" y="45" width="150" height="58" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="145" y="70" text-anchor="middle" font-size="13">Utility Source A</text>
+            <text x="145" y="88" text-anchor="middle" font-size="11" fill="#64748b">13.8 kV</text>
+            <circle cx="205" cy="58" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable device" data-id="SRC_B">
+            <rect class="select-fill" x="1000" y="45" width="150" height="58" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="1075" y="70" text-anchor="middle" font-size="13">Utility Source B</text>
+            <text x="1075" y="88" text-anchor="middle" font-size="11" fill="#64748b">13.8 kV</text>
+            <circle cx="1135" cy="58" r="7" fill="#16a34a" />
+          </g>
+
+          <line x1="145" y1="103" x2="145" y2="180" stroke="#334155" stroke-width="4" />
+          <line x1="1075" y1="103" x2="1075" y2="180" stroke="#334155" stroke-width="4" />
+
+          <!-- Main breakers -->
+          <g class="clickable breaker" data-id="MAIN_A">
+            <rect class="select-fill" x="110" y="180" width="70" height="58" rx="10" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="124" y1="225" x2="166" y2="193" stroke="#16a34a" stroke-width="5" />
+            <text x="145" y="262" text-anchor="middle" font-size="12">Main A</text>
+            <circle cx="170" cy="193" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable breaker" data-id="MAIN_B">
+            <rect class="select-fill" x="1040" y="180" width="70" height="58" rx="10" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="1054" y1="225" x2="1096" y2="193" stroke="#16a34a" stroke-width="5" />
+            <text x="1075" y="262" text-anchor="middle" font-size="12">Main B</text>
+            <circle cx="1100" cy="193" r="7" fill="#16a34a" />
+          </g>
+
+          <line x1="145" y1="238" x2="145" y2="315" stroke="#334155" stroke-width="4" />
+          <line x1="1075" y1="238" x2="1075" y2="315" stroke="#334155" stroke-width="4" />
+
+          <!-- Bus A and B -->
+          <g class="clickable bus" data-id="BUS_A">
+            <line class="select-stroke" x1="95" y1="315" x2="560" y2="315" stroke="#111827" stroke-width="8" stroke-linecap="round" />
+            <text x="330" y="292" text-anchor="middle" font-size="14">13.8 kV Bus A</text>
+            <circle cx="575" cy="315" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable bus" data-id="BUS_B">
+            <line class="select-stroke" x1="660" y1="315" x2="1125" y2="315" stroke="#111827" stroke-width="8" stroke-linecap="round" />
+            <text x="895" y="292" text-anchor="middle" font-size="14">13.8 kV Bus B</text>
+            <circle cx="1140" cy="315" r="7" fill="#16a34a" />
+          </g>
+
+          <!-- Tie -->
+          <line x1="560" y1="315" x2="585" y2="315" stroke="#334155" stroke-width="4" />
+          <g class="clickable breaker" data-id="TIE">
+            <rect class="select-fill" x="585" y="286" width="50" height="58" rx="10" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="596" y1="331" x2="624" y2="302" stroke="#64748b" stroke-width="5" />
+            <text x="610" y="366" text-anchor="middle" font-size="12">Tie</text>
+            <circle cx="628" cy="300" r="7" fill="#ca8a04" />
+          </g>
+          <line x1="635" y1="315" x2="660" y2="315" stroke="#334155" stroke-width="4" />
+          <text x="610" y="265" text-anchor="middle" font-size="12" fill="#64748b">Normally Open</text>
+
+          <!-- Feeder drops -->
+          <line x1="170" y1="315" x2="170" y2="415" stroke="#334155" stroke-width="4" />
+          <line x1="330" y1="315" x2="330" y2="415" stroke="#334155" stroke-width="4" />
+          <line x1="490" y1="315" x2="490" y2="415" stroke="#334155" stroke-width="4" />
+          <line x1="730" y1="315" x2="730" y2="415" stroke="#334155" stroke-width="4" />
+          <line x1="890" y1="315" x2="890" y2="415" stroke="#334155" stroke-width="4" />
+          <line x1="1050" y1="315" x2="1050" y2="415" stroke="#334155" stroke-width="4" />
+
+          <!-- Feeders -->
+          <g class="clickable breaker" data-id="FDR_1">
+            <rect class="select-fill" x="125" y="415" width="90" height="70" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="143" y1="468" x2="197" y2="430" stroke="#16a34a" stroke-width="5" />
+            <text x="170" y="512" text-anchor="middle" font-size="12">FDR-1</text>
+            <text x="170" y="530" text-anchor="middle" font-size="11" fill="#64748b">Motor</text>
+            <circle cx="198" cy="428" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable breaker" data-id="FDR_2">
+            <rect class="select-fill" x="285" y="415" width="90" height="70" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="303" y1="468" x2="357" y2="430" stroke="#16a34a" stroke-width="5" />
+            <text x="330" y="512" text-anchor="middle" font-size="12">FDR-2</text>
+            <text x="330" y="530" text-anchor="middle" font-size="11" fill="#64748b">XFMR</text>
+            <circle cx="358" cy="428" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable breaker" data-id="FDR_3">
+            <rect class="select-fill" x="445" y="415" width="90" height="70" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="463" y1="468" x2="517" y2="430" stroke="#ca8a04" stroke-width="5" />
+            <text x="490" y="512" text-anchor="middle" font-size="12">FDR-3</text>
+            <text x="490" y="530" text-anchor="middle" font-size="11" fill="#64748b">VFD</text>
+            <circle cx="518" cy="428" r="7" fill="#ca8a04" />
+          </g>
+          <g class="clickable breaker" data-id="FDR_4">
+            <rect class="select-fill" x="685" y="415" width="90" height="70" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="703" y1="468" x2="757" y2="430" stroke="#16a34a" stroke-width="5" />
+            <text x="730" y="512" text-anchor="middle" font-size="12">FDR-4</text>
+            <text x="730" y="530" text-anchor="middle" font-size="11" fill="#64748b">Cap Bank</text>
+            <circle cx="758" cy="428" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable breaker" data-id="FDR_5">
+            <rect class="select-fill" x="845" y="415" width="90" height="70" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="863" y1="468" x2="917" y2="430" stroke="#dc2626" stroke-width="5" />
+            <text x="890" y="512" text-anchor="middle" font-size="12">FDR-5</text>
+            <text x="890" y="530" text-anchor="middle" font-size="11" fill="#64748b">MCC</text>
+            <circle cx="918" cy="428" r="7" fill="#dc2626" />
+          </g>
+          <g class="clickable breaker" data-id="FDR_6">
+            <rect class="select-fill" x="1005" y="415" width="90" height="70" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="1023" y1="468" x2="1077" y2="430" stroke="#64748b" stroke-width="5" />
+            <text x="1050" y="512" text-anchor="middle" font-size="12">FDR-6</text>
+            <text x="1050" y="530" text-anchor="middle" font-size="11" fill="#64748b">Spare</text>
+            <circle cx="1078" cy="428" r="7" fill="#ca8a04" />
+          </g>
+
+          <!-- Load labels -->
+          <g class="clickable device" data-id="LOAD_1">
+            <rect class="select-fill" x="115" y="570" width="110" height="50" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="170" y="592" text-anchor="middle" font-size="12">Pump Motor</text>
+            <text x="170" y="609" text-anchor="middle" font-size="11" fill="#64748b">2.4 MW</text>
+          </g>
+          <line x1="170" y1="485" x2="170" y2="570" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable device" data-id="LOAD_2">
+            <rect class="select-fill" x="275" y="570" width="110" height="50" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="330" y="592" text-anchor="middle" font-size="12">Unit Sub TX</text>
+            <text x="330" y="609" text-anchor="middle" font-size="11" fill="#64748b">4.8 MVA</text>
+          </g>
+          <line x1="330" y1="485" x2="330" y2="570" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable device" data-id="LOAD_3">
+            <rect class="select-fill" x="435" y="570" width="110" height="50" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="490" y="592" text-anchor="middle" font-size="12">VFD Process</text>
+            <text x="490" y="609" text-anchor="middle" font-size="11" fill="#64748b">Derated</text>
+          </g>
+          <line x1="490" y1="485" x2="490" y2="570" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable device" data-id="LOAD_4">
+            <rect class="select-fill" x="675" y="570" width="110" height="50" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="730" y="592" text-anchor="middle" font-size="12">Cap Bank</text>
+            <text x="730" y="609" text-anchor="middle" font-size="11" fill="#64748b">3.6 Mvar</text>
+          </g>
+          <line x1="730" y1="485" x2="730" y2="570" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable device" data-id="LOAD_5">
+            <rect class="select-fill" x="835" y="570" width="110" height="50" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="890" y="592" text-anchor="middle" font-size="12">MCC Lineup</text>
+            <text x="890" y="609" text-anchor="middle" font-size="11" fill="#64748b">Tripped</text>
+          </g>
+          <line x1="890" y1="485" x2="890" y2="570" stroke="#334155" stroke-width="4" />
+
+          <g class="clickable device" data-id="LOAD_6">
+            <rect class="select-fill" x="995" y="570" width="110" height="50" rx="12" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="1050" y="592" text-anchor="middle" font-size="12">Spare Cable</text>
+            <text x="1050" y="609" text-anchor="middle" font-size="11" fill="#64748b">Grounded?</text>
+          </g>
+          <line x1="1050" y1="485" x2="1050" y2="570" stroke="#334155" stroke-width="4" />
+
+          <!-- Controls and safety objects -->
+          <g class="clickable device" data-id="RELAYS">
+            <rect class="select-fill" x="75" y="690" width="170" height="58" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="160" y="715" text-anchor="middle" font-size="13">Relay Panel</text>
+            <text x="160" y="734" text-anchor="middle" font-size="11" fill="#64748b">OC, GF, BF, ZSI</text>
+            <circle cx="230" cy="703" r="7" fill="#ca8a04" />
+          </g>
+          <g class="clickable device" data-id="CONTROL_PWR">
+            <rect class="select-fill" x="310" y="690" width="170" height="58" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="395" y="715" text-anchor="middle" font-size="13">Control Power</text>
+            <text x="395" y="734" text-anchor="middle" font-size="11" fill="#64748b">125 Vdc / UPS</text>
+            <circle cx="465" cy="703" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable device" data-id="ARC_MODE">
+            <rect class="select-fill" x="545" y="690" width="170" height="58" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="630" y="715" text-anchor="middle" font-size="13">Arc-Flash Mode</text>
+            <text x="630" y="734" text-anchor="middle" font-size="11" fill="#64748b">Maintenance switch</text>
+            <circle cx="700" cy="703" r="7" fill="#ca8a04" />
+          </g>
+          <g class="clickable device" data-id="INTERLOCKS">
+            <rect class="select-fill" x="780" y="690" width="170" height="58" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="865" y="715" text-anchor="middle" font-size="13">Interlocks</text>
+            <text x="865" y="734" text-anchor="middle" font-size="11" fill="#64748b">Tie, ground, racking</text>
+            <circle cx="935" cy="703" r="7" fill="#ca8a04" />
+          </g>
+          <g class="clickable device" data-id="SCADA">
+            <rect class="select-fill" x="1015" y="690" width="170" height="58" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="1100" y="715" text-anchor="middle" font-size="13">SCADA / Gateway</text>
+            <text x="1100" y="734" text-anchor="middle" font-size="11" fill="#64748b">Points, SOE, alarms</text>
+            <circle cx="1170" cy="703" r="7" fill="#16a34a" />
+          </g>
+
+          <!-- dashed dependency lines -->
+          <line x1="160" y1="690" x2="890" y2="485" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+          <line x1="395" y1="690" x2="610" y2="286" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+          <line x1="630" y1="690" x2="145" y2="180" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+          <line x1="865" y1="690" x2="610" y2="315" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+          <line x1="1100" y1="690" x2="490" y2="415" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+        </svg>
+      </section>
+
+      <aside class="card" id="asset-panel">
+        <div class="panel-top">
+          <div>
+            <p class="small" style="margin:0">Selected Asset</p>
+            <h2 id="asset-name">Utility Source A</h2>
+            <p class="small" id="asset-type">Incoming Source</p>
+          </div>
+          <span id="risk-badge" class="badge risk-low">Low Risk</span>
+        </div>
+        <div class="metrics" id="metrics"></div>
+        <div class="section">
+          <h3>Active Alarms / Notes</h3>
+          <div class="alarm-list" id="alarms"></div>
+        </div>
+        <div class="owner-box" id="owner-box"><strong>Data owner:</strong> Electrical Operations</div>
+        <p class="small" id="last-update">Last update: simulated live data</p>
+
+        <div class="section ai-panel">
+          <div class="ai-header">
+            <div>
+              <p class="eyebrow" style="margin:0">AI Switchgear Safety & Commissioning Assistant</p>
+              <h3 id="ai-title">Asset assessment</h3>
+            </div>
+            <span id="ai-confidence" class="badge risk-medium">Medium Confidence</span>
+          </div>
+          <div class="ai-box"><div class="ai-label">Assessment</div><p id="ai-assessment"></p></div>
+          <div class="ai-box"><div class="ai-label">Evidence Used</div><ul id="ai-evidence"></ul></div>
+          <div class="ai-box"><div class="ai-label">Recommended Next Checks</div><ol id="ai-actions"></ol></div>
+          <div class="ai-box consequence"><div class="ai-label">Safety / Switching / Commissioning Consequence</div><p id="ai-consequence"></p></div>
+          <div class="ask-ai">
+            <label for="ai-question">Ask the twin</label>
+            <input id="ai-question" type="text" placeholder="Example: Is this feeder safe to work on?" />
+            <button id="ai-ask-button" type="button">Ask</button>
+          </div>
+          <div id="ai-answer" class="ai-answer">Try asking about safety, racking, trip cause, switching, interlocks, SCADA gaps, or maintenance.</div>
+        </div>
+      </aside>
+    </main>
+
+    <section class="card" style="margin-top:24px">
+      <h2>MV Switchgear Digital Twin Readiness / Execution Risk Checks</h2>
+      <p class="small">A useful MV switchgear twin should expose gaps before they become unsafe switching assumptions, failed SAT points, unclear relay targets, incomplete interlocks, or maintenance-window delays.</p>
+      <div class="table-wrap" style="margin-top:14px">
+        <table>
+          <thead><tr><th>ID</th><th>Category</th><th>Issue</th><th>Consequence</th><th>Severity</th></tr></thead>
+          <tbody>
+            <tr><td>MVSG-001</td><td>Safety</td><td>Spare feeder cable is shown open but grounding status is ambiguous</td><td>Electrical work may be incorrectly assumed safe</td><td>High</td></tr>
+            <tr><td>MVSG-002</td><td>Commissioning</td><td>Feeder FDR-5 trip target is present locally but not confirmed in SCADA</td><td>SAT point-to-point and event reconstruction gap</td><td>High</td></tr>
+            <tr><td>MVSG-003</td><td>Interface</td><td>Tie breaker permissive logic is active but source ownership is split between relay, PLC, and OEM</td><td>Switching procedure clarification loop likely</td><td>Medium</td></tr>
+            <tr><td>MVSG-004</td><td>Protection</td><td>FDR-3 active settings group may not match VFD operating mode</td><td>Nuisance trip or inadequate protection risk</td><td>High</td></tr>
+            <tr><td>MVSG-005</td><td>Operations</td><td>Arc-flash maintenance mode is active but not fully alarmed to SCADA</td><td>Operators may not understand protection speed/selectivity tradeoff</td><td>Medium</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="test-status" id="test-status">Self-tests not run yet.</div>
+    </section>
+
+    <section class="footer-grid">
+      <div class="info-card"><h3>Operations</h3><p>Operators click the cubicle or bus and see source, breaker, racking, control power, relay, arc-flash, and interlock state.</p></div>
+      <div class="info-card"><h3>Engineering</h3><p>Engineers compare drawings, relay settings, CT ratios, SCADA points, breaker ratings, and interlock logic against the design basis.</p></div>
+      <div class="info-card"><h3>Maintenance</h3><p>Maintenance teams verify open/closed state, racking position, voltage indication, grounding, trip circuit, and work-risk status before switching.</p></div>
+      <div class="info-card"><h3>Manager Value</h3><p>Reduces clarification loops, unsafe assumptions, failed point checks, and late discovery of gaps the engineering team should not be resolving during SAT.</p></div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var assetData = {
+        SRC_A: { name: "Utility Source A", type: "Incoming Source", status: "Available", voltage: "13.84 kV", current: "610 A", power: "14.3 MW", breaker: "Main A closed", racking: "N/A", relay: "Source protection healthy", temp: "N/A", alarms: ["None"], comms: "Healthy", owner: "Electrical Operations", risk: "Low" },
+        SRC_B: { name: "Utility Source B", type: "Incoming Source", status: "Available", voltage: "13.79 kV", current: "575 A", power: "13.4 MW", breaker: "Main B closed", racking: "N/A", relay: "Source protection healthy", temp: "N/A", alarms: ["None"], comms: "Healthy", owner: "Electrical Operations", risk: "Low" },
+        MAIN_A: { name: "Main Breaker A", type: "13.8 kV Vacuum Breaker", status: "Closed", voltage: "13.84 kV", current: "610 A", power: "14.3 MW", breaker: "Closed / spring charged", racking: "Connected", relay: "50/51, 50G/51G healthy", temp: "42 C", alarms: ["Trip circuit supervision normal"], comms: "Healthy", owner: "Protection & Control", risk: "Low" },
+        MAIN_B: { name: "Main Breaker B", type: "13.8 kV Vacuum Breaker", status: "Closed", voltage: "13.79 kV", current: "575 A", power: "13.4 MW", breaker: "Closed / spring charged", racking: "Connected", relay: "50/51, 50G/51G healthy", temp: "44 C", alarms: ["Trip circuit supervision normal"], comms: "Healthy", owner: "Protection & Control", risk: "Low" },
+        BUS_A: { name: "13.8 kV Bus A", type: "Main Bus Section", status: "Energized", voltage: "13.84 kV", current: "610 A", power: "14.3 MW", breaker: "Main A closed", racking: "N/A", relay: "Bus protection healthy", temp: "Bus temp 39 C", alarms: ["None"], comms: "Healthy", owner: "Switchgear Owner", risk: "Low" },
+        BUS_B: { name: "13.8 kV Bus B", type: "Main Bus Section", status: "Energized", voltage: "13.79 kV", current: "575 A", power: "13.4 MW", breaker: "Main B closed", racking: "N/A", relay: "Bus protection healthy", temp: "Bus temp 40 C", alarms: ["None"], comms: "Healthy", owner: "Switchgear Owner", risk: "Low" },
+        TIE: { name: "Bus Tie Breaker", type: "13.8 kV Vacuum Breaker", status: "Open", voltage: "13.8 kV both sides", current: "0 A", power: "0.0 MW", breaker: "Open / spring charged", racking: "Connected", relay: "Tie permissive logic active", temp: "37 C", alarms: ["Auto-transfer blocked: both mains closed"], comms: "Healthy", owner: "Protection / Switchgear OEM", risk: "Medium" },
+        FDR_1: { name: "Feeder Breaker FDR-1", type: "Motor Feeder", status: "Closed", voltage: "13.84 kV", current: "118 A", power: "2.4 MW", breaker: "Closed / spring charged", racking: "Connected", relay: "Motor protection group 1", temp: "Breaker 41 C", alarms: ["None"], comms: "Healthy", owner: "Motor Operations", risk: "Low" },
+        FDR_2: { name: "Feeder Breaker FDR-2", type: "Transformer Feeder", status: "Closed", voltage: "13.84 kV", current: "205 A", power: "4.3 MW", breaker: "Closed / spring charged", racking: "Connected", relay: "Transformer feeder group 1", temp: "Breaker 43 C", alarms: ["None"], comms: "Healthy", owner: "Electrical Operations", risk: "Low" },
+        FDR_3: { name: "Feeder Breaker FDR-3", type: "VFD Feeder", status: "Closed / Attention", voltage: "13.82 kV", current: "156 A", power: "3.1 MW", breaker: "Closed / spring charged", racking: "Connected", relay: "Settings group 1 active", temp: "Breaker 47 C", alarms: ["VFD harmonic heating watch", "Settings group review required"], comms: "Healthy", owner: "Process / Protection", risk: "Medium" },
+        FDR_4: { name: "Feeder Breaker FDR-4", type: "Capacitor Bank Feeder", status: "Closed", voltage: "13.78 kV", current: "72 A", power: "-3.6 Mvar", breaker: "Closed / spring charged", racking: "Connected", relay: "Cap bank protection healthy", temp: "Breaker 39 C", alarms: ["Neutral current normal"], comms: "Healthy", owner: "Power Quality", risk: "Low" },
+        FDR_5: { name: "Feeder Breaker FDR-5", type: "MCC Feeder", status: "Tripped", voltage: "13.79 kV source side", current: "0 A", power: "0.0 MW", breaker: "Open / tripped", racking: "Connected", relay: "Last trip: phase overcurrent", temp: "Breaker 38 C", alarms: ["Phase overcurrent trip", "Trip target not confirmed to SCADA"], comms: "Healthy", owner: "MCC / Protection", risk: "High" },
+        FDR_6: { name: "Feeder Breaker FDR-6", type: "Spare Feeder", status: "Open", voltage: "13.79 kV source side", current: "0 A", power: "0.0 MW", breaker: "Open / spring charged", racking: "Test position", relay: "Feeder relay healthy", temp: "Breaker 34 C", alarms: ["Cable-side ground status unknown"], comms: "Healthy", owner: "Maintenance", risk: "Medium" },
+        LOAD_1: { name: "Pump Motor Load", type: "MV Motor", status: "Running", voltage: "13.84 kV", current: "118 A", power: "2.4 MW", breaker: "Fed by FDR-1", racking: "N/A", relay: "Motor differential clear", temp: "Bearing 58 C", alarms: ["None"], comms: "Healthy", owner: "Process Operations", risk: "Low" },
+        LOAD_2: { name: "Unit Substation Transformer", type: "Load Transformer", status: "Energized", voltage: "13.84 kV / 480 V", current: "205 A", power: "4.3 MW", breaker: "Fed by FDR-2", racking: "N/A", relay: "Temperature alarm clear", temp: "Top oil 69 C", alarms: ["None"], comms: "Healthy", owner: "Electrical Operations", risk: "Low" },
+        LOAD_3: { name: "VFD Process Load", type: "VFD / Drive Load", status: "Derated", voltage: "13.82 kV", current: "156 A", power: "3.1 MW", breaker: "Fed by FDR-3", racking: "N/A", relay: "Harmonic watch", temp: "Drive room 34 C", alarms: ["Harmonic heating watch"], comms: "Healthy", owner: "Process / Drives", risk: "Medium" },
+        LOAD_4: { name: "Capacitor Bank", type: "Reactive Power Device", status: "Connected", voltage: "13.78 kV", current: "72 A", power: "-3.6 Mvar", breaker: "Fed by FDR-4", racking: "N/A", relay: "Neutral current normal", temp: "Cabinet 36 C", alarms: ["None"], comms: "Healthy", owner: "Power Quality", risk: "Low" },
+        LOAD_5: { name: "MCC Lineup", type: "Motor Control Center", status: "De-energized after trip", voltage: "0 V load side", current: "0 A", power: "0.0 MW", breaker: "FDR-5 tripped", racking: "N/A", relay: "Trip investigation required", temp: "N/A", alarms: ["Process load unavailable"], comms: "Healthy", owner: "MCC / Process", risk: "High" },
+        LOAD_6: { name: "Spare Feeder Cable", type: "Spare Cable / Future Load", status: "Open", voltage: "Source side energized", current: "0 A", power: "0.0 MW", breaker: "FDR-6 open", racking: "Test position", relay: "Healthy", temp: "N/A", alarms: ["Grounding status not confirmed"], comms: "Healthy", owner: "Maintenance", risk: "High" },
+        RELAYS: { name: "Relay Panel", type: "Protection Relay System", status: "Attention", voltage: "125 Vdc", current: "N/A", power: "N/A", breaker: "Multiple feeder controls", racking: "N/A", relay: "One SCADA target mapping gap", temp: "Panel 29 C", alarms: ["FDR-5 trip target local only", "FDR-3 settings group review"], comms: "Healthy", owner: "Protection & Control", risk: "Medium" },
+        CONTROL_PWR: { name: "Control Power System", type: "125 Vdc / UPS / CPT", status: "Normal", voltage: "126.4 Vdc", current: "18 A", power: "2.3 kW", breaker: "Control circuits healthy", racking: "N/A", relay: "Trip/close supply normal", temp: "Battery room 24 C", alarms: ["None"], comms: "Healthy", owner: "Station Service", risk: "Low" },
+        ARC_MODE: { name: "Arc-Flash Maintenance Mode", type: "Protection Safety Mode", status: "Active", voltage: "N/A", current: "N/A", power: "N/A", breaker: "Applies to Bus A feeders", racking: "N/A", relay: "Instantaneous enabled", temp: "N/A", alarms: ["Maintenance mode active but not confirmed to SCADA summary"], comms: "Partial", owner: "Safety / Protection", risk: "Medium" },
+        INTERLOCKS: { name: "Switchgear Interlocks", type: "Tie, Racking, Grounding Interlocks", status: "Attention", voltage: "N/A", current: "N/A", power: "N/A", breaker: "Tie close blocked", racking: "FDR-6 test position", relay: "PLC/relay/OEM split", temp: "N/A", alarms: ["Tie permissive source ownership unclear", "Ground switch permissive not mapped"], comms: "Healthy", owner: "Switchgear OEM / Protection", risk: "Medium" },
+        SCADA: { name: "SCADA / Gateway", type: "Automation Interface", status: "Online", voltage: "N/A", current: "N/A", power: "N/A", breaker: "Breaker statuses online", racking: "Racking position partial", relay: "SOE enabled", temp: "Gateway 36 C", alarms: ["FDR-5 trip target missing", "FDR-6 cable ground point not mapped"], comms: "Healthy", owner: "SCADA / OT", risk: "Medium" }
+      };
+
+      var aiInsights = {
+        SRC_A: { title: "Source A is available and stable", confidence: "Medium", assessment: "Source A voltage and load are normal. AI would verify source metering, upstream protection, and transfer sequence behavior during loss-of-source events.", evidence: ["Voltage is 13.84 kV", "Main A is closed", "No active source alarm"], actions: ["Confirm source voltage metering source", "Verify loss-of-source alarm", "Review automatic/manual transfer logic", "Confirm upstream utility/interface ownership"], consequence: "If source status is not traceable, transfer decisions may rely on incomplete information." },
+        SRC_B: { title: "Source B is available and stable", confidence: "Medium", assessment: "Source B is normal. AI would check whether Source B can carry transferred Bus A load if the tie is closed after Main A opens.", evidence: ["Voltage is 13.79 kV", "Main B is closed", "No active source alarm"], actions: ["Confirm Source B capacity margin", "Verify transfer load calculation", "Check tie close permissives", "Confirm upstream protection coordination"], consequence: "Transfer capability should not be assumed from the one-line alone." },
+        MAIN_A: { title: "Main A is healthy; verify breaker failure and maintenance-mode interactions", confidence: "High", assessment: "Main A is closed and healthy. AI would verify breaker failure, trip circuit supervision, 52a/52b mapping, and arc-flash maintenance-mode behavior.", evidence: ["Breaker closed", "Trip circuit supervision normal", "Relay healthy"], actions: ["Verify 52a/52b SCADA points", "Test breaker failure initiate", "Confirm maintenance-mode logic", "Check SOE timestamp source"], consequence: "A main breaker status gap can affect every downstream switching and commissioning procedure." },
+        MAIN_B: { title: "Main B is healthy; confirm transfer permissives", confidence: "High", assessment: "Main B is closed and healthy. AI would verify whether it can support tie-transfer operation if Bus A is transferred.", evidence: ["Breaker closed", "Trip circuit supervision normal", "Source B available"], actions: ["Verify 52a/52b SCADA points", "Confirm tie permissive logic", "Check bus load transfer assumptions", "Confirm breaker failure logic"], consequence: "Main/tie/main schemes are high-value but often fail commissioning because permissive ownership is unclear." },
+        BUS_A: { title: "Bus A is energized and normal", confidence: "Medium", assessment: "Bus A is energized with normal loading. AI would validate feeder totals, bus voltage source, and whether maintenance mode applies to all Bus A feeders.", evidence: ["Bus voltage is 13.84 kV", "Main A is closed", "Arc-flash mode applies to Bus A feeders"], actions: ["Reconcile feeder currents to bus load", "Confirm PT/VT source", "Verify arc-flash maintenance mode scope", "Check bus differential status if applicable"], consequence: "Bus-level assumptions affect safety boundaries and protection behavior." },
+        BUS_B: { title: "Bus B is energized with downstream issue on FDR-5", confidence: "High", assessment: "Bus B itself is normal, but one downstream feeder is tripped and spare feeder grounding status is ambiguous. AI separates bus health from feeder-level risk.", evidence: ["Bus energized", "FDR-5 tripped", "FDR-6 cable-side ground status unknown"], actions: ["Confirm Bus B voltage source", "Review FDR-5 trip cause", "Verify FDR-6 grounding status", "Check tie transfer implications"], consequence: "Bus B may be energized and healthy while downstream work remains unsafe or unresolved." },
+        TIE: { title: "Tie breaker is correctly open but permissive ownership is a risk", confidence: "High", assessment: "The tie is open with both mains closed, which is expected. AI flags ownership and test-evidence risk because tie close/block logic often spans relays, PLCs, switchgear OEM wiring, and operating procedures.", evidence: ["Tie open", "Both mains closed", "Auto-transfer blocked", "Permissive logic active"], actions: ["Map tie close permissives by source", "Confirm main-open requirement", "Verify sync/voltage checks if applicable", "Link logic to approved switching procedure", "Test local and remote tie controls"], consequence: "A tie logic gap can stall switching procedures and create unsafe or failed transfer attempts." },
+        FDR_1: { title: "FDR-1 motor feeder is normal", confidence: "High", assessment: "FDR-1 is closed, connected, and feeding a running motor. AI would verify motor protection targets and start/inrush settings for future events.", evidence: ["Breaker closed", "Motor running", "No alarms"], actions: ["Verify motor relay settings group", "Check start count and thermal model", "Confirm trip/close SCADA points", "Review last maintenance date"], consequence: "Normal feeder records provide the reference for diagnosing abnormal feeders." },
+        FDR_2: { title: "FDR-2 transformer feeder is normal", confidence: "High", assessment: "FDR-2 is closed and feeding a unit substation transformer. AI would verify transformer protection, inrush restraint, and downstream load visibility.", evidence: ["Breaker closed", "Transformer energized", "No alarms"], actions: ["Confirm relay CT ratio", "Check transformer temperature alarms", "Verify lockout/trip path", "Reconcile feeder MW with transformer load"], consequence: "Transformer feeder gaps often surface during SAT when lockout and alarm mapping are tested." },
+        FDR_3: { title: "FDR-3 needs protection/settings review", confidence: "High", assessment: "FDR-3 is closed but has harmonic heating watch and active settings group review. Because the load is a VFD, settings group and harmonic assumptions matter.", evidence: ["Settings group 1 active", "VFD harmonic heating watch", "Breaker temperature 47 C"], actions: ["Confirm active settings group matches VFD mode", "Review harmonic filtering and heating trend", "Check CT ratio and relay scaling", "Verify nuisance-trip history", "Include settings group verification in SAT"], consequence: "Wrong settings group can create nuisance trips or inadequate protection for the VFD feeder." },
+        FDR_4: { title: "FDR-4 capacitor bank feeder is normal", confidence: "High", assessment: "The capacitor feeder is closed and neutral current is normal. AI would check switching duty, inrush, and voltage/VAR control interaction.", evidence: ["Breaker closed", "Cap bank connected", "Neutral current normal"], actions: ["Verify cap bank alarm thresholds", "Check switching counter", "Confirm voltage/VAR control logic", "Review breaker duty"], consequence: "Capacitor banks require clear switching and alarm evidence to avoid SCADA/operator confusion." },
+        FDR_5: { title: "FDR-5 tripped; trip target mapping gap is high risk", confidence: "High", assessment: "FDR-5 is tripped on phase overcurrent. Local relay target exists, but SCADA target confirmation is missing. AI treats this as both an operations issue and a commissioning evidence gap.", evidence: ["Breaker is open/tripped", "Last trip is phase overcurrent", "Trip target not confirmed to SCADA", "MCC load unavailable"], actions: ["Retrieve relay event record", "Confirm cause before reset/reclose", "Map trip target to SCADA and SOE", "Verify lockout or reclose policy", "Inspect downstream MCC before energization"], consequence: "Resetting without confirmed cause risks repeat trip or equipment damage; missing SCADA target causes event reconstruction and SAT failures." },
+        FDR_6: { title: "FDR-6 open spare feeder has safety ambiguity", confidence: "High", assessment: "FDR-6 is open and in test position, but cable-side ground status is unknown. AI does not treat this as safe for work until isolation, absence of voltage, and grounding are confirmed.", evidence: ["Breaker open", "Racking position is test", "Cable-side ground status unknown", "Spare cable status says grounded?"], actions: ["Confirm cable-side voltage indication", "Verify ground switch position or portable grounds", "Check racking shutters/interlocks", "Map ground status to SCADA or work package", "Do not mark safe until field verification is complete"], consequence: "An open breaker is not the same as an electrically safe work condition. Ambiguous grounding creates serious safety and work-control risk." },
+        LOAD_1: { title: "Pump motor load is normal", confidence: "Medium", assessment: "The motor is running and feeder is healthy. AI would monitor motor thermal state and protection history.", evidence: ["Motor running", "Bearing temperature 58 C", "No alarms"], actions: ["Check motor thermal model", "Review start history", "Confirm vibration data if available", "Verify overload alarm mapping"], consequence: "Motor condition data improves maintenance planning and prevents nuisance trips." },
+        LOAD_2: { title: "Unit substation transformer is normal", confidence: "Medium", assessment: "The transformer is energized and within expected temperature. AI would reconcile feeder and downstream load data.", evidence: ["Transformer energized", "Top oil 69 C", "No alarms"], actions: ["Verify temperature alarms", "Reconcile low-side loading", "Confirm lockout trip path", "Review maintenance history"], consequence: "Transformer data helps distinguish upstream feeder issues from downstream load issues." },
+        LOAD_3: { title: "VFD process load is derated", confidence: "High", assessment: "The VFD load is derated and aligns with FDR-3 harmonic heating watch. AI correlates process/load behavior with protection and thermal risk.", evidence: ["Load derated", "Drive room 34 C", "Harmonic heating watch"], actions: ["Check drive cooling", "Review harmonic spectrum", "Confirm relay settings group", "Review process operating mode"], consequence: "VFD issues can cause both process limitation and electrical protection nuisance trips." },
+        LOAD_4: { title: "Capacitor bank is connected and normal", confidence: "Medium", assessment: "The capacitor bank is connected with normal neutral current. AI would verify switching logic and MVAR sign convention.", evidence: ["Cap bank connected", "Neutral current normal", "-3.6 Mvar shown"], actions: ["Confirm MVAR sign convention", "Check fuse/neutral alarms", "Verify switching permissives", "Review voltage-control interaction"], consequence: "Poor cap-bank mapping causes operator confusion and power-quality troubleshooting delays." },
+        LOAD_5: { title: "MCC lineup is de-energized after FDR-5 trip", confidence: "High", assessment: "The MCC is unavailable because FDR-5 tripped. AI recommends cause confirmation and downstream inspection before reclose.", evidence: ["Load side is 0 V", "FDR-5 tripped", "Process load unavailable"], actions: ["Inspect downstream MCC fault indicators", "Review relay event record", "Confirm motor/control loads before reclose", "Coordinate with process owner"], consequence: "Blind re-energization after overcurrent can damage equipment or extend outage." },
+        LOAD_6: { title: "Spare feeder cable is not confirmed safe", confidence: "High", assessment: "The spare cable is open but grounding status is not confirmed. AI treats this as a high safety risk until verified by approved work-control process.", evidence: ["Breaker open", "Source side energized", "Grounding status not confirmed"], actions: ["Verify absence of voltage", "Confirm grounding device or portable grounds", "Check cable tagging and destination", "Require field verification before work authorization"], consequence: "This is the classic false-confidence gap: open indication is not enough for personnel safety." },
+        RELAYS: { title: "Relay panel has mapping and settings-group issues", confidence: "High", assessment: "Relay system is mostly healthy, but FDR-5 target mapping and FDR-3 settings group review are active concerns. AI flags this as protection and commissioning risk.", evidence: ["FDR-5 trip target local only", "FDR-3 settings group review", "Communications healthy"], actions: ["Map relay targets to SCADA/SOE", "Verify settings group control", "Confirm CT/PT ratios", "Review breaker failure logic", "Add failed points to SAT punch list"], consequence: "Relay gaps create review churn and SAT failures even when the one-line looks complete." },
+        CONTROL_PWR: { title: "Control power is healthy", confidence: "High", assessment: "125 Vdc and control circuits are normal. AI would still verify DC loss alarms, trip/close supply, and battery test evidence.", evidence: ["126.4 Vdc", "Trip/close supply normal", "No alarms"], actions: ["Check DC battery test record", "Verify loss-of-DC alarms", "Confirm trip and close fuse monitoring", "Review UPS/CPT dependencies"], consequence: "Healthy control power supports reliable switching; missing DC alarms can hide a critical failure mode." },
+        ARC_MODE: { title: "Arc-flash maintenance mode is active but visibility is incomplete", confidence: "High", assessment: "Maintenance mode is active for Bus A feeders. AI flags incomplete SCADA visibility because maintenance mode can change protection speed/selectivity and must be visible to operators.", evidence: ["Maintenance mode active", "Applies to Bus A feeders", "Not confirmed to SCADA summary", "Comms partial"], actions: ["Confirm which feeders are affected", "Map maintenance mode status to SCADA", "Verify alarm text and priority", "Confirm procedure for enabling/disabling", "Review selectivity impact"], consequence: "Operators may not understand that protection behavior has changed, creating safety and coordination risk." },
+        INTERLOCKS: { title: "Interlock ownership and mapping need clarification", confidence: "High", assessment: "Interlocks are active, but ownership is split among switchgear OEM, relay logic, and possibly PLC logic. AI flags this as switching and FAT/SAT risk.", evidence: ["Tie close blocked", "FDR-6 test position", "Ground switch permissive not mapped", "PLC/relay/OEM split"], actions: ["Create interlock source-of-truth matrix", "Test tie close/block permissives", "Verify racking permissives", "Map ground switch status", "Link interlocks to switching procedures"], consequence: "Undefined interlock ownership is one of the fastest ways to create commissioning delays and unsafe switching assumptions." },
+        SCADA: { title: "SCADA is online but point completeness is not sufficient", confidence: "High", assessment: "SCADA gateway is healthy, but key points are missing: FDR-5 trip target and FDR-6 cable ground status. AI treats this as a readiness gap, not a communication failure.", evidence: ["SCADA online", "Breaker statuses online", "Racking position partial", "FDR-5 trip target missing", "FDR-6 cable ground point not mapped"], actions: ["Add FDR-5 trip target to point list", "Map FDR-6 ground status or document not available", "Verify racking position points", "Run SAT point-to-point test", "Link SOE to relay targets"], consequence: "The system can be online and still not be review-ready or commissioning-ready if critical points are absent." }
+      };
+
+      var metricOrder = [["Status", "status"], ["Voltage", "voltage"], ["Current", "current"], ["Power", "power"], ["Breaker", "breaker"], ["Racking", "racking"], ["Relay", "relay"], ["Comms", "comms"]];
+
+      function escapeHtml(value) {
+        return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
+      }
+      function getElement(id) { return document.getElementById(id); }
+      function confidenceClass(confidence) { if (confidence === "High") return "risk-low"; if (confidence === "Medium") return "risk-medium"; return "risk-high"; }
+      function renderMetrics(asset) {
+        var html = "";
+        for (var i = 0; i < metricOrder.length; i += 1) {
+          var label = metricOrder[i][0]; var key = metricOrder[i][1];
+          html += '<div class="metric"><div class="metric-label">' + escapeHtml(label) + '</div><div class="metric-value">' + escapeHtml(asset[key]) + '</div></div>';
+        }
+        getElement("metrics").innerHTML = html;
+      }
+      function renderList(id, items, tagName) {
+        var html = "";
+        for (var i = 0; i < items.length; i += 1) html += "<" + tagName + ">" + escapeHtml(items[i]) + "</" + tagName + ">";
+        getElement(id).innerHTML = html;
+      }
+      function setSelected(id) {
+        var asset = assetData[id]; var insight = aiInsights[id];
+        if (!asset || !insight) return;
+        var selectedItems = document.querySelectorAll(".selected");
+        for (var i = 0; i < selectedItems.length; i += 1) selectedItems[i].classList.remove("selected");
+        var group = document.querySelector('[data-id="' + id + '"]');
+        if (group) group.classList.add("selected");
+        getElement("asset-name").textContent = asset.name;
+        getElement("asset-type").textContent = asset.type;
+        var riskBadge = getElement("risk-badge");
+        riskBadge.textContent = asset.risk + " Risk";
+        riskBadge.className = "badge risk-" + asset.risk.toLowerCase();
+        renderMetrics(asset);
+        renderList("alarms", asset.alarms, "div");
+        var alarmNodes = getElement("alarms").children;
+        for (var j = 0; j < alarmNodes.length; j += 1) alarmNodes[j].className = "alarm";
+        getElement("owner-box").innerHTML = "<strong>Data owner:</strong> " + escapeHtml(asset.owner);
+        getElement("last-update").textContent = "Last update: simulated live data - " + (Math.floor(Math.random() * 5) + 1) + " seconds ago";
+        getElement("ai-title").textContent = insight.title;
+        var conf = getElement("ai-confidence");
+        conf.textContent = insight.confidence + " Confidence";
+        conf.className = "badge " + confidenceClass(insight.confidence);
+        getElement("ai-assessment").textContent = insight.assessment;
+        renderList("ai-evidence", insight.evidence, "li");
+        renderList("ai-actions", insight.actions, "li");
+        getElement("ai-consequence").textContent = insight.consequence;
+        getElement("ai-answer").textContent = "Try asking about safety, racking, trip cause, switching, interlocks, SCADA gaps, or maintenance.";
+      }
+      function getCurrentSelectedId() {
+        var selected = document.querySelector(".selected");
+        if (selected && selected.getAttribute("data-id")) return selected.getAttribute("data-id");
+        return "SRC_A";
+      }
+      function answerQuestion() {
+        var selected = getCurrentSelectedId();
+        var asset = assetData[selected]; var insight = aiInsights[selected];
+        var q = getElement("ai-question").value.toLowerCase();
+        var answer = "This demo uses rule-based AI-style responses. In a production MV switchgear twin, this would call a governed AI service with citations to drawings, relay settings, SCADA point lists, test records, switching orders, maintenance records, and OEM documentation.";
+        if (!asset || !insight) return;
+        if (q.indexOf("safe") >= 0 || q.indexOf("safety") >= 0 || q.indexOf("work") >= 0 || q.indexOf("ground") >= 0) {
+          answer = asset.name + ": safety review must verify open/closed state, racking position, voltage absence, grounding, arc-flash mode, and approved work-control steps. AI finding: " + insight.assessment;
+        } else if (q.indexOf("rack") >= 0 || q.indexOf("racking") >= 0 || q.indexOf("test position") >= 0) {
+          answer = asset.name + ": current racking status is " + asset.racking + ". AI would verify shutter/interlock status, control plug position, remote indication, and whether racking status is included in SCADA/SAT evidence.";
+        } else if (q.indexOf("trip") >= 0 || q.indexOf("fault") >= 0 || q.indexOf("target") >= 0) {
+          answer = asset.name + ": relay/trip context is " + asset.relay + ". Current alarms/notes: " + asset.alarms.join("; ") + ". Confirm relay event record before reset or reclose.";
+        } else if (q.indexOf("switch") >= 0 || q.indexOf("tie") >= 0 || q.indexOf("transfer") >= 0 || q.indexOf("interlock") >= 0) {
+          answer = asset.name + ": switching review should verify source availability, breaker state, tie permissives, interlocks, load transfer capacity, and approved MOP/switching order. First checks: " + insight.actions.slice(0, 4).join("; ") + ".";
+        } else if (q.indexOf("scada") >= 0 || q.indexOf("point") >= 0 || q.indexOf("commission") >= 0 || q.indexOf("sat") >= 0) {
+          answer = asset.name + ": commissioning review should verify SCADA points, SOE timestamping, relay targets, 52a/52b, racking status, trip circuit alarms, and test evidence. Consequence: " + insight.consequence;
+        } else if (q.indexOf("maint") >= 0 || q.indexOf("service") >= 0) {
+          answer = asset.name + ": maintenance review should verify operation count, last test date, trip/close timing, insulation/PD results, racking mechanism condition, and safety isolation evidence.";
+        } else if (q.indexOf("owner") >= 0 || q.indexOf("ownership") >= 0) {
+          answer = asset.name + ": current data owner is " + asset.owner + ". AI would still require explicit ownership across switchgear OEM, protection, SCADA, maintenance, safety, and operations.";
+        } else if (q.indexOf("risk") >= 0 || q.indexOf("why") >= 0) {
+          answer = asset.name + ": risk is " + asset.risk + ". AI assessment: " + insight.assessment;
+        }
+        getElement("ai-answer").textContent = answer;
+      }
+      function runSelfTests() {
+        var requiredIds = Object.keys(assetData); var missing = [];
+        for (var i = 0; i < requiredIds.length; i += 1) {
+          var id = requiredIds[i];
+          if (!document.querySelector('[data-id="' + id + '"]')) missing.push(id + " has no SVG object");
+          if (!aiInsights[id]) missing.push(id + " has no AI insight");
+        }
+        setSelected("FDR_5");
+        var tripOk = getElement("asset-name").textContent === "Feeder Breaker FDR-5";
+        setSelected("SRC_A");
+        var startOk = getElement("asset-name").textContent === "Utility Source A";
+        if (!tripOk) missing.push("FDR_5 selection test failed");
+        if (!startOk) missing.push("SRC_A selection test failed");
+        var status = getElement("test-status");
+        if (missing.length === 0) {
+          status.textContent = "Self-tests passed: all assets have SVG objects, AI insights, and working selection behavior.";
+          status.style.color = "#166534"; status.style.background = "#dcfce7"; status.style.borderColor = "#bbf7d0";
+        } else {
+          status.textContent = "Self-tests found issues: " + missing.join("; ");
+          status.style.color = "#991b1b"; status.style.background = "#fee2e2"; status.style.borderColor = "#fecaca";
+        }
+      }
+      function init() {
+        var clickableItems = document.querySelectorAll("[data-id]");
+        for (var i = 0; i < clickableItems.length; i += 1) {
+          clickableItems[i].addEventListener("click", function (event) { setSelected(event.currentTarget.getAttribute("data-id")); });
+        }
+        getElement("ai-ask-button").addEventListener("click", answerQuestion);
+        getElement("ai-question").addEventListener("keydown", function (event) { if (event.key === "Enter") answerQuestion(); });
+        setSelected("SRC_A");
+        runSelfTests();
+      }
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+    }());
+  </script>
+</body>
+</html>

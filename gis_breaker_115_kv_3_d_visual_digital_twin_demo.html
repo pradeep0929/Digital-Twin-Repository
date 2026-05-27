@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>115 kV GIS Breaker 3D Visual Digital Twin Demo</title>
+  <style>
+    :root {
+      --bg:#f1f5f9; --card:#fff; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
+      --blue:#2563eb; --green:#16a34a; --yellow:#ca8a04; --red:#dc2626;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);padding:24px}
+    .container{max-width:1540px;margin:0 auto}.eyebrow{color:var(--blue);font-weight:800;font-size:14px;margin:0 0 6px}h1{font-size:34px;line-height:1.1;margin:0}h2{font-size:22px;margin:0}h3{margin:0}.subtitle{color:var(--muted);max-width:1100px;line-height:1.5;margin-top:10px}.grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(420px,1fr);gap:24px;margin-top:24px}.card{background:var(--card);border:1px solid var(--border);border-radius:22px;box-shadow:0 8px 24px rgba(15,23,42,.05);padding:20px}.card-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.small{color:var(--muted);font-size:14px;margin-top:4px}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.legend-item{display:flex;align-items:center;gap:6px}.dot{width:12px;height:12px;border-radius:999px;display:inline-block}svg{width:100%;height:790px;background:#f8fafc;border:1px solid var(--border);border-radius:18px}.clickable{cursor:pointer}.clickable:hover text{fill:var(--blue);font-weight:800}.selected .select-stroke{stroke:var(--blue)!important;stroke-width:12!important}.selected .select-fill{stroke:var(--blue)!important;stroke-width:4!important;filter:url(#selectedGlow)}.panel-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}.badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 10px;font-size:13px;border:1px solid;white-space:nowrap;font-weight:800}.risk-low{background:#dcfce7;color:#166534;border-color:#bbf7d0}.risk-medium{background:#fef9c3;color:#854d0e;border-color:#fde68a}.risk-high{background:#fee2e2;color:#991b1b;border-color:#fecaca}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.metric{background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px;min-height:72px}.metric-label{color:var(--muted);font-size:12px}.metric-value{font-weight:800;margin-top:6px}.section{margin-top:22px}.alarm-list{display:grid;gap:8px;margin-top:10px}.alarm{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:10px;font-size:14px}.owner-box{margin-top:16px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:12px;border-radius:14px;font-size:14px}.ai-panel{border-top:1px solid var(--border);padding-top:18px}.ai-header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.ai-box{background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:10px;font-size:14px}.ai-box p{margin:6px 0 0;color:#334155;line-height:1.45}.ai-box ul,.ai-box ol{margin:8px 0 0;padding-left:20px;color:#334155;line-height:1.45}.ai-label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;font-weight:800}.consequence{background:#fff7ed;border-color:#fed7aa}.ask-ai{margin-top:14px;display:grid;gap:8px}.ask-ai label{font-size:13px;font-weight:800;color:#334155}.ask-ai input{border:1px solid var(--border);border-radius:12px;padding:11px 12px;font-size:14px;outline:none}.ask-ai input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #dbeafe}.ask-ai button{border:0;border-radius:12px;background:var(--blue);color:white;padding:10px 12px;font-weight:800;cursor:pointer}.ai-answer{margin-top:10px;background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;border-radius:14px;padding:12px;font-size:14px;line-height:1.45}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;border-bottom:1px solid var(--border);padding:10px 8px;vertical-align:top}th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}.test-status{margin-top:16px;font-size:13px;color:#166534;background:#dcfce7;border:1px solid #bbf7d0;border-radius:12px;padding:10px}.footer-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:24px}.info-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(15,23,42,.04)}.info-card p{color:var(--muted);font-size:14px;line-height:1.45;margin-bottom:0}@media(max-width:1150px){.grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:720px){body{padding:14px}h1{font-size:26px}.footer-grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr}svg{height:630px}}
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <p class="eyebrow">115 kV GIS Breaker Digital Twin Prototype</p>
+    <h1>Polished 3D-Feeling GIS Breaker Twin with SF6, Mechanism, Controls, and Protection Status</h1>
+    <p class="subtitle">This standalone demo models a <strong>115 kV gas-insulated switchgear breaker bay</strong> with a more dimensional visual assembly: cylindrical GIS bus sections, disconnect modules, CT ring, breaker chamber, interrupter cutaway, SF6 density gauge, operating mechanism, local control cabinet, earthing switch, protection panel, condition monitor, and SCADA interface.</p>
+  </header>
+
+  <main class="grid">
+    <section class="card">
+      <div class="card-header">
+        <div><h2>Interactive 3D-Style GIS Breaker Assembly</h2><p class="small">Click each GIS object to inspect simulated health, alarms, owner, and AI assessment.</p></div>
+        <div class="legend"><span class="legend-item"><span class="dot" style="background:#16a34a"></span>Normal</span><span class="legend-item"><span class="dot" style="background:#ca8a04"></span>Attention</span><span class="legend-item"><span class="dot" style="background:#dc2626"></span>Alarm / High Risk</span></div>
+      </div>
+
+      <svg viewBox="0 0 1260 840" aria-label="3D-style 115 kV GIS breaker digital twin diagram">
+        <defs>
+          <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="25%" stop-color="#eef2f7"/><stop offset="65%" stop-color="#cbd5e1"/><stop offset="100%" stop-color="#94a3b8"/></linearGradient>
+          <linearGradient id="steelDark" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#94a3b8"/></linearGradient>
+          <linearGradient id="blueGlass" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#60a5fa"/></linearGradient>
+          <radialGradient id="cap" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#ffffff"/><stop offset="60%" stop-color="#dbe4ef"/><stop offset="100%" stop-color="#94a3b8"/></radialGradient>
+          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="7" flood-color="#0f172a" flood-opacity="0.16"/></filter>
+          <filter id="selectedGlow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#2563eb" flood-opacity="0.9"/></filter>
+        </defs>
+
+        <!-- Line terminal -->
+        <g class="clickable device selected" data-id="LINE_SIDE">
+          <rect class="select-fill" x="40" y="92" width="170" height="64" rx="16" fill="white" stroke="#334155" stroke-width="2"/>
+          <text x="125" y="120" text-anchor="middle" font-size="13">115 kV Line Side</text><text x="125" y="140" text-anchor="middle" font-size="11" fill="#64748b">GIS feeder terminal</text><circle cx="193" cy="106" r="7" fill="#16a34a"/>
+        </g>
+
+        <!-- 3D cylinders helper shapes manually drawn -->
+        <line x1="210" y1="124" x2="292" y2="124" stroke="#334155" stroke-width="5"/>
+
+        <!-- Line disconnect module -->
+        <g class="clickable device" data-id="DS_LINE">
+          <rect class="select-fill" x="292" y="86" width="122" height="76" rx="38" fill="url(#steel)" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+          <ellipse cx="292" cy="124" rx="18" ry="38" fill="url(#cap)" stroke="#334155" stroke-width="2"/>
+          <ellipse cx="414" cy="124" rx="18" ry="38" fill="url(#cap)" stroke="#334155" stroke-width="2"/>
+          <path d="M318 140 L388 106" stroke="#16a34a" stroke-width="5" stroke-linecap="round"/>
+          <text x="353" y="183" text-anchor="middle" font-size="12">Line Disconnect</text><text x="353" y="201" text-anchor="middle" font-size="11" fill="#64748b">Closed</text><circle cx="395" cy="95" r="7" fill="#16a34a"/>
+        </g>
+        <line x1="432" y1="124" x2="495" y2="124" stroke="#334155" stroke-width="5"/>
+
+        <!-- CT ring -->
+        <g class="clickable device" data-id="CT">
+          <circle class="select-fill" cx="545" cy="124" r="52" fill="url(#cap)" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+          <circle cx="545" cy="124" r="25" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+          <line x1="493" y1="124" x2="597" y2="124" stroke="#334155" stroke-width="5"/>
+          <text x="545" y="197" text-anchor="middle" font-size="12">GIS CT</text><text x="545" y="215" text-anchor="middle" font-size="11" fill="#64748b">Protection / metering</text><circle cx="582" cy="87" r="7" fill="#16a34a"/>
+        </g>
+        <line x1="597" y1="124" x2="650" y2="124" stroke="#334155" stroke-width="5"/>
+
+        <!-- Main breaker chamber -->
+        <g class="clickable device" data-id="BREAKER_MAIN">
+          <rect class="select-fill" x="650" y="72" width="290" height="104" rx="52" fill="url(#steel)" stroke="#334155" stroke-width="3" filter="url(#shadow)"/>
+          <ellipse cx="650" cy="124" rx="26" ry="52" fill="url(#cap)" stroke="#334155" stroke-width="2"/>
+          <ellipse cx="940" cy="124" rx="26" ry="52" fill="url(#cap)" stroke="#334155" stroke-width="2"/>
+          <path d="M681 100 C730 82, 853 82, 910 101" fill="none" stroke="#ffffff" stroke-width="9" opacity="0.65"/>
+          <circle cx="715" cy="124" r="24" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+          <circle cx="795" cy="124" r="24" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+          <circle cx="875" cy="124" r="24" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+          <line x1="715" y1="124" x2="875" y2="124" stroke="#64748b" stroke-width="3" stroke-dasharray="6 5"/>
+          <text x="795" y="98" text-anchor="middle" font-size="15" font-weight="800">GIS Breaker Chamber</text><text x="795" y="160" text-anchor="middle" font-size="11" fill="#64748b">Closed • SF6 insulated • 3-pole interrupter section</text><circle cx="915" cy="85" r="7" fill="#ca8a04"/>
+        </g>
+
+        <!-- Interrupter cutaway -->
+        <g class="clickable device" data-id="INTERRUPTERS">
+          <rect class="select-fill" x="700" y="228" width="190" height="88" rx="18" fill="white" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+          <rect x="725" y="255" width="32" height="34" rx="8" fill="url(#blueGlass)" stroke="#334155" stroke-width="2"/>
+          <rect x="779" y="255" width="32" height="34" rx="8" fill="url(#blueGlass)" stroke="#334155" stroke-width="2"/>
+          <rect x="833" y="255" width="32" height="34" rx="8" fill="url(#blueGlass)" stroke="#334155" stroke-width="2"/>
+          <text x="795" y="244" text-anchor="middle" font-size="12">Interrupter Cutaway</text><text x="795" y="306" text-anchor="middle" font-size="11" fill="#64748b">Contact wear estimate 62%</text><circle cx="870" cy="241" r="7" fill="#ca8a04"/>
+        </g>
+        <line x1="795" y1="176" x2="795" y2="228" stroke="#334155" stroke-width="4" stroke-dasharray="8 8"/>
+
+        <!-- SF6 density monitor gauge -->
+        <g class="clickable device" data-id="SF6_MONITOR">
+          <circle class="select-fill" cx="1015" cy="124" r="42" fill="white" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+          <circle cx="1015" cy="124" r="30" fill="#f8fafc" stroke="#334155" stroke-width="1"/>
+          <path d="M994 135 A26 26 0 0 1 1036 135" fill="none" stroke="#16a34a" stroke-width="5"/>
+          <path d="M1036 135 A26 26 0 0 1 1041 112" fill="none" stroke="#ca8a04" stroke-width="5"/>
+          <line x1="1015" y1="124" x2="1035" y2="112" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
+          <text x="1015" y="191" text-anchor="middle" font-size="12">SF6 Density</text><text x="1015" y="209" text-anchor="middle" font-size="11" fill="#64748b">6.3 bar equiv.</text><circle cx="1048" cy="93" r="7" fill="#ca8a04"/>
+        </g>
+        <line x1="940" y1="124" x2="973" y2="124" stroke="#334155" stroke-width="5"/>
+
+        <!-- Bus disconnect and bus -->
+        <line x1="1057" y1="124" x2="1095" y2="124" stroke="#334155" stroke-width="5"/>
+        <g class="clickable device" data-id="DS_BUS">
+          <rect class="select-fill" x="1095" y="86" width="122" height="76" rx="38" fill="url(#steel)" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+          <ellipse cx="1095" cy="124" rx="18" ry="38" fill="url(#cap)" stroke="#334155" stroke-width="2"/>
+          <ellipse cx="1217" cy="124" rx="18" ry="38" fill="url(#cap)" stroke="#334155" stroke-width="2"/>
+          <path d="M1121 140 L1191 106" stroke="#16a34a" stroke-width="5" stroke-linecap="round"/>
+          <text x="1156" y="183" text-anchor="middle" font-size="12">Bus Disconnect</text><text x="1156" y="201" text-anchor="middle" font-size="11" fill="#64748b">Closed</text><circle cx="1198" cy="95" r="7" fill="#16a34a"/>
+        </g>
+        <g class="clickable bus" data-id="BUS_SIDE">
+          <rect class="select-fill" x="1030" y="25" width="185" height="36" rx="18" fill="url(#steelDark)" stroke="#334155" stroke-width="2"/>
+          <ellipse cx="1030" cy="43" rx="12" ry="18" fill="url(#cap)" stroke="#334155" stroke-width="1"/>
+          <ellipse cx="1215" cy="43" rx="12" ry="18" fill="url(#cap)" stroke="#334155" stroke-width="1"/>
+          <text x="1122" y="18" text-anchor="middle" font-size="14">115 kV GIS Bus</text><circle cx="1204" cy="28" r="7" fill="#16a34a"/>
+        </g>
+        <line x1="1156" y1="86" x2="1156" y2="61" stroke="#334155" stroke-width="4"/>
+
+        <!-- Earth switch assembly -->
+        <g class="clickable device" data-id="EARTH_SWITCH">
+          <line x1="1156" y1="162" x2="1156" y2="248" stroke="#334155" stroke-width="4"/>
+          <rect class="select-fill" x="1098" y="248" width="116" height="64" rx="14" fill="white" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+          <path d="M1124 294 L1174 260" stroke="#64748b" stroke-width="5" stroke-linecap="round"/>
+          <line x1="1156" y1="312" x2="1156" y2="344" stroke="#334155" stroke-width="4"/>
+          <line x1="1120" y1="344" x2="1192" y2="344" stroke="#334155" stroke-width="4"/>
+          <text x="1156" y="326" text-anchor="middle" font-size="11">Earth Switch</text><circle cx="1196" cy="260" r="7" fill="#ca8a04"/>
+        </g>
+
+        <!-- Operating mechanism and drive shaft -->
+        <g class="clickable device" data-id="MECHANISM">
+          <rect class="select-fill" x="620" y="360" width="180" height="175" rx="18" fill="white" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+          <circle cx="710" cy="430" r="42" fill="url(#cap)" stroke="#334155" stroke-width="2"/>
+          <path d="M710 430 L710 392" stroke="#334155" stroke-width="4"/>
+          <path d="M710 430 L744 448" stroke="#334155" stroke-width="4"/>
+          <path d="M710 430 L678 450" stroke="#334155" stroke-width="4"/>
+          <rect x="662" y="486" width="96" height="22" rx="11" fill="#dbeafe" stroke="#334155" stroke-width="1"/>
+          <text x="710" y="386" text-anchor="middle" font-size="12">Spring Drive</text><text x="710" y="525" text-anchor="middle" font-size="11" fill="#64748b">Charged • 1,842 operations</text><circle cx="780" cy="378" r="7" fill="#16a34a"/>
+        </g>
+        <line x1="710" y1="360" x2="740" y2="176" stroke="#334155" stroke-width="4" stroke-dasharray="8 8"/>
+
+        <!-- Local control cabinet -->
+        <g class="clickable device" data-id="LOCAL_CTRL">
+          <rect class="select-fill" x="880" y="370" width="190" height="170" rx="18" fill="white" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+          <rect x="920" y="402" width="110" height="52" rx="9" fill="#e2e8f0" stroke="#334155" stroke-width="2"/>
+          <circle cx="935" cy="480" r="7" fill="#16a34a"/><circle cx="965" cy="480" r="7" fill="#ca8a04"/><circle cx="995" cy="480" r="7" fill="#16a34a"/>
+          <text x="975" y="392" text-anchor="middle" font-size="12">Local Control Cabinet</text><text x="975" y="424" text-anchor="middle" font-size="11" fill="#64748b">Local / Remote</text><text x="975" y="525" text-anchor="middle" font-size="11" fill="#64748b">Remote selected</text><circle cx="1048" cy="388" r="7" fill="#16a34a"/>
+        </g>
+
+        <!-- Lower digital panels -->
+        <g class="clickable device" data-id="PROTECTION">
+          <rect class="select-fill" x="360" y="625" width="240" height="68" rx="16" fill="white" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+          <text x="480" y="653" text-anchor="middle" font-size="13">Protection / Trip Interface</text><text x="480" y="674" text-anchor="middle" font-size="11" fill="#64748b">52a/52b • trip coils • gas lockout</text><circle cx="578" cy="640" r="7" fill="#16a34a"/>
+        </g>
+        <g class="clickable device" data-id="CONDITION_MON">
+          <rect class="select-fill" x="650" y="625" width="240" height="68" rx="16" fill="white" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+          <text x="770" y="653" text-anchor="middle" font-size="13">Condition Monitoring</text><text x="770" y="674" text-anchor="middle" font-size="11" fill="#64748b">SF6 trend • wear • timing • ops</text><circle cx="868" cy="640" r="7" fill="#ca8a04"/>
+        </g>
+        <g class="clickable device" data-id="SCADA">
+          <rect class="select-fill" x="940" y="625" width="200" height="68" rx="16" fill="white" stroke="#334155" stroke-width="2" filter="url(#shadow)"/>
+          <text x="1040" y="653" text-anchor="middle" font-size="13">SCADA / Gateway</text><text x="1040" y="674" text-anchor="middle" font-size="11" fill="#64748b">Remote commands / SOE</text><circle cx="1120" cy="640" r="7" fill="#16a34a"/>
+        </g>
+        <line x1="480" y1="625" x2="710" y2="535" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7"/>
+        <line x1="770" y1="625" x2="1015" y2="166" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7"/>
+        <line x1="1040" y1="625" x2="975" y2="540" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7"/>
+      </svg>
+    </section>
+
+    <aside class="card" id="asset-panel">
+      <div class="panel-top"><div><p class="small" style="margin:0">Selected Asset</p><h2 id="asset-name">115 kV Line Side</h2><p class="small" id="asset-type">GIS Interface</p></div><span id="risk-badge" class="badge risk-low">Low Risk</span></div>
+      <div class="metrics" id="metrics"></div>
+      <div class="section"><h3>Active Alarms / Notes</h3><div class="alarm-list" id="alarms"></div></div>
+      <div class="owner-box" id="owner-box"><strong>Data owner:</strong> GIS Operations</div><p class="small" id="last-update">Last update: simulated live data</p>
+      <div class="section ai-panel"><div class="ai-header"><div><p class="eyebrow" style="margin:0">AI GIS Breaker Health Assistant</p><h3 id="ai-title">Asset assessment</h3></div><span id="ai-confidence" class="badge risk-medium">Medium Confidence</span></div><div class="ai-box"><div class="ai-label">Assessment</div><p id="ai-assessment"></p></div><div class="ai-box"><div class="ai-label">Evidence Used</div><ul id="ai-evidence"></ul></div><div class="ai-box"><div class="ai-label">Recommended Next Checks</div><ol id="ai-actions"></ol></div><div class="ai-box consequence"><div class="ai-label">Asset / Operations / Maintenance Consequence</div><p id="ai-consequence"></p></div><div class="ask-ai"><label for="ai-question">Ask the twin</label><input id="ai-question" type="text" placeholder="Example: Is the breaker healthy enough for switching duty?"/><button id="ai-ask-button" type="button">Ask</button></div><div id="ai-answer" class="ai-answer">Try asking about SF6, contact wear, operations count, spring mechanism, trip circuit, or maintenance risk.</div></div>
+    </aside>
+  </main>
+
+  <section class="card" style="margin-top:24px"><h2>GIS Breaker Health / Execution Risk Checks</h2><p class="small">A useful GIS breaker twin should expose issues before they become failed switching operations, low-gas lockout events, missed trip-circuit alarms, contact wear surprises, or commissioning gaps.</p><div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>ID</th><th>Category</th><th>Issue</th><th>Consequence</th><th>Severity</th></tr></thead><tbody><tr><td>GIS-001</td><td>Gas Condition</td><td>SF6 density slightly below nominal alarm margin</td><td>Can progress toward alarm or lockout if trend continues</td><td>High</td></tr><tr><td>GIS-002</td><td>Mechanical</td><td>Operation count is elevated for time since last maintenance</td><td>Mechanical wear risk and slower operation response</td><td>Medium</td></tr><tr><td>GIS-003</td><td>Condition Monitoring</td><td>Contact wear estimate trending upward</td><td>Potential breaker maintenance need earlier than expected</td><td>Medium</td></tr><tr><td>GIS-004</td><td>Monitoring / Controls</td><td>Some local alarm detail is not fully summarized remotely</td><td>Operators may miss early warning context</td><td>Medium</td></tr></tbody></table></div><div class="test-status" id="test-status">Self-tests not run yet.</div></section>
+
+  <section class="footer-grid"><div class="info-card"><h3>Operations</h3><p>Operators can click the GIS breaker and inspect open/close state, gas condition, local-remote status, and switching readiness.</p></div><div class="info-card"><h3>Maintenance</h3><p>Maintenance teams can focus on SF6 density trend, mechanism health, operation count, contact wear, and alarm verification.</p></div><div class="info-card"><h3>Engineering</h3><p>Engineers can compare device status, protection indication, condition monitoring, and SCADA visibility against design intent.</p></div><div class="info-card"><h3>Manager Value</h3><p>Reduces late discovery of gas and mechanism issues and improves switching certainty, outage planning, and asset readiness.</p></div></section>
+</div>
+
+<script>
+(function(){"use strict";
+var assetData={
+LINE_SIDE:{name:"115 kV Line Side",type:"GIS Interface",status:"Energized",voltage:"115.4 kV",current:"612 A",power:"121 MVA",health:"Stable interface",temp:"N/A",condition:"Normal",comms:"Healthy",alarms:["None"],owner:"GIS Operations",risk:"Low"},
+DS_LINE:{name:"Line-Side Disconnect Switch",type:"GIS Disconnect Switch",status:"Closed",voltage:"115.4 kV",current:"612 A",power:"121 MVA",health:"Position healthy",temp:"39 C",condition:"Motor operator healthy",comms:"Healthy",alarms:["No switch alarm"],owner:"GIS Operations",risk:"Low"},
+CT:{name:"Current Transformer",type:"GIS CT",status:"In service",voltage:"115.4 kV class",current:"612 A",power:"Metering / protection input",health:"Normal",temp:"36 C",condition:"Secondary values reasonable",comms:"Healthy",alarms:["None"],owner:"Protection & Control",risk:"Low"},
+BREAKER_MAIN:{name:"GIS Breaker Chamber",type:"115 kV SF6 Circuit Breaker",status:"Closed / Attention",voltage:"115.4 kV",current:"612 A",power:"121 MVA",health:"Gas and mechanical trend need review",temp:"Tank 43 C",condition:"Spring charged • op count 1,842",comms:"Healthy",alarms:["SF6 density watch active","Condition trend review recommended"],owner:"Breaker Asset Management",risk:"Medium"},
+INTERRUPTERS:{name:"Interrupter Cutaway",type:"Breaker Interrupter Section",status:"Attention",voltage:"Inside GIS enclosure",current:"Duty dependent",power:"Switching duty component",health:"Contact wear estimate increasing",temp:"N/A",condition:"Estimated contact wear 62% life used",comms:"Derived / monitored",alarms:["Contact wear trend watch"],owner:"Breaker Asset Management",risk:"Medium"},
+SF6_MONITOR:{name:"SF6 Density Monitor",type:"Gas Density / Pressure Supervision",status:"Attention",voltage:"N/A",current:"N/A",power:"N/A",health:"Slightly below nominal reference",temp:"Gas temp compensated",condition:"6.3 bar equivalent • alarm margin remaining",comms:"Healthy",alarms:["Low-gas watch active"],owner:"Condition Monitoring",risk:"High"},
+DS_BUS:{name:"Bus-Side Disconnect Switch",type:"GIS Disconnect Switch",status:"Closed",voltage:"115.4 kV",current:"612 A",power:"121 MVA",health:"Position healthy",temp:"38 C",condition:"Normal",comms:"Healthy",alarms:["None"],owner:"GIS Operations",risk:"Low"},
+BUS_SIDE:{name:"115 kV GIS Bus",type:"GIS Bus Section",status:"Energized",voltage:"115.3 kV",current:"612 A",power:"121 MVA",health:"Normal",temp:"N/A",condition:"Bus available",comms:"Healthy",alarms:["None"],owner:"GIS Operations",risk:"Low"},
+EARTH_SWITCH:{name:"Earthing Switch",type:"GIS Earth Switch",status:"Open",voltage:"N/A",current:"0 A",power:"N/A",health:"Open and available",temp:"N/A",condition:"Interlocked",comms:"Healthy",alarms:["No ground switch alarm"],owner:"GIS Operations",risk:"Low"},
+MECHANISM:{name:"Operating Mechanism",type:"Spring Drive Mechanism",status:"Normal",voltage:"125 Vdc control",current:"N/A",power:"Stored energy mechanism",health:"Spring charged and available",temp:"Cabinet 34 C",condition:"Operation count 1,842",comms:"Healthy",alarms:["Maintenance interval watch only"],owner:"Breaker Maintenance",risk:"Medium"},
+LOCAL_CTRL:{name:"Local Control Cabinet",type:"Breaker Local Control Panel",status:"Healthy",voltage:"125 Vdc / control wiring",current:"N/A",power:"Local controls",health:"Local / remote healthy",temp:"Cabinet 31 C",condition:"Selector in remote",comms:"Healthy",alarms:["No panel alarm"],owner:"Protection & Control",risk:"Low"},
+PROTECTION:{name:"Protection / Trip Interface",type:"Trip Circuits / Indications",status:"Healthy",voltage:"125 Vdc",current:"N/A",power:"Protection interface",health:"Trip circuits healthy",temp:"Panel 29 C",condition:"52a/52b normal",comms:"Healthy",alarms:["Some local detail not summarized remotely"],owner:"Protection & Control",risk:"Low"},
+CONDITION_MON:{name:"Condition Monitoring",type:"Breaker Condition Monitoring",status:"Attention",voltage:"N/A",current:"N/A",power:"N/A",health:"Gas + wear trend require follow-up",temp:"N/A",condition:"Ops count / wear / SF6 trended",comms:"Healthy",alarms:["Trend review recommended"],owner:"Condition Monitoring",risk:"Medium"},
+SCADA:{name:"SCADA / Gateway",type:"Remote Interface",status:"Online",voltage:"N/A",current:"N/A",power:"N/A",health:"Remote indication healthy",temp:"Gateway 30 C",condition:"Point mapping normal",comms:"Healthy",alarms:["Some maintenance detail only visible locally"],owner:"SCADA / OT",risk:"Low"}
+};
+var aiInsights={
+LINE_SIDE:{title:"Line-side interface is normal",confidence:"Medium",assessment:"The line-side GIS interface appears electrically normal. AI focus is mainly on breaker readiness rather than the line-side interface itself.",evidence:["Voltage is 115.4 kV","Current is 612 A","No line-side alarm is present"],actions:["Verify recent disturbance history","Confirm interface point mapping","Check insulation status if condition data exists","Use line-side values as reference for breaker analysis"],consequence:"A stable interface helps isolate concern to the breaker assembly rather than external system conditions."},
+DS_LINE:{title:"Line-side disconnect is healthy",confidence:"High",assessment:"The line-side disconnect switch is closed and healthy. AI would verify position indication, motor operator status, and switching interlock correctness.",evidence:["Switch is closed","No switch alarm","Position status is healthy"],actions:["Confirm open/close indication to SCADA","Verify interlocks with breaker and earth switch","Review motor operator maintenance status","Check switching sequence logic"],consequence:"Disconnect indication errors can create switching uncertainty even if the switch is mechanically healthy."},
+CT:{title:"CT appears normal",confidence:"Medium",assessment:"The GIS current transformer appears normal. AI uses it as the source of protection and monitoring confidence for the breaker bay.",evidence:["Current reading is reasonable","No CT alarm","Protection input available"],actions:["Compare secondary values to expected range","Verify relay scaling","Check event record consistency","Confirm metering/protection data integrity"],consequence:"Reliable CT data is essential to trust protection and breaker event interpretation."},
+BREAKER_MAIN:{title:"Breaker is in service but gas/mechanical trend needs review",confidence:"High",assessment:"The breaker is closed and available, but SF6 density margin and condition-monitoring trends suggest follow-up is warranted. This is not a forced-outage condition in the demo, but it is not fully carefree.",evidence:["Breaker is closed","SF6 density watch active","Operation count is 1,842","Condition trend review is recommended"],actions:["Review SF6 trend rate, not only present value","Check operation count against maintenance plan","Confirm recent timing test results","Verify local and remote alarm visibility","Review contact wear estimate against maintenance threshold"],consequence:"If ignored, the breaker could move toward low-gas lockout or mechanical-maintenance need without sufficient planning."},
+INTERRUPTERS:{title:"Interrupter wear trend should be monitored",confidence:"High",assessment:"The interrupter section shows increasing contact wear estimate. AI interprets this as a maintenance-planning issue rather than an immediate switching prohibition.",evidence:["Estimated contact wear is 62% life used","Wear trend watch is active","No present trip/lockout is indicated"],actions:["Review number of fault interruptions","Compare wear estimate to manufacturer guidance","Schedule maintenance window if threshold is approaching","Confirm timing and travel test history"],consequence:"Ignoring wear trend can create surprise maintenance need or reduced confidence in interruption duty."},
+SF6_MONITOR:{title:"SF6 density is the most important present health concern",confidence:"High",assessment:"The SF6 density monitor is slightly below nominal reference with remaining alarm margin. AI treats this as the highest-priority condition signal in the breaker assembly.",evidence:["Equivalent density is 6.3 bar","Low-gas watch is active","Alarm margin remains"],actions:["Review density trend over time","Check temperature compensation correctness","Inspect for possible leakage indicators","Verify low-gas alarm and lockout setpoints","Plan corrective action if trend continues downward"],consequence:"If gas density continues to decline, the breaker can approach alarm or lockout condition and lose operational availability."},
+DS_BUS:{title:"Bus-side disconnect is healthy",confidence:"High",assessment:"The bus-side disconnect switch appears normal. AI focus is on position verification and switching sequence integrity.",evidence:["Switch is closed","No alarm present","Position is healthy"],actions:["Confirm switch indication remotely","Verify interlock logic","Check maintenance history","Confirm switching procedure alignment"],consequence:"Healthy disconnect switches support reliable GIS switching sequence execution."},
+BUS_SIDE:{title:"GIS bus is normal",confidence:"Medium",assessment:"The bus-side GIS section appears electrically normal. AI uses it primarily as a stable reference for breaker bay condition assessment.",evidence:["Bus is energized","Voltage is normal","No bus alarm"],actions:["Confirm bus voltage trend","Review adjacent bay context if needed","Use bus stability to isolate breaker health","Check bus alarm summary visibility"],consequence:"A stable bus helps distinguish device-specific condition from wider system disturbance."},
+EARTH_SWITCH:{title:"Earthing switch is normal and open",confidence:"High",assessment:"The earthing switch is open and interlocked, which is appropriate in this energized configuration.",evidence:["Earth switch is open","Interlocked condition is shown","No ground switch alarm"],actions:["Verify open position indication","Confirm interlock with disconnect/breaker sequence","Check switching logic documentation","Review maintenance/test history"],consequence:"Ground switch position clarity is critical for switching safety and maintenance readiness."},
+MECHANISM:{title:"Mechanism is healthy but operation count is relevant",confidence:"High",assessment:"The spring mechanism is charged and available. AI would still track operation count and maintenance interval because mechanism issues often emerge as reliability concerns before failure.",evidence:["Spring is charged","Operation count is 1,842","No active mechanism fault alarm"],actions:["Review operation count since last overhaul","Check recent timing results","Verify trip/close coil current signature","Inspect maintenance interval and lubrication history"],consequence:"A healthy present state does not eliminate wear risk if operation count is rising faster than expected."},
+LOCAL_CTRL:{title:"Local control cabinet is healthy",confidence:"High",assessment:"The local control cabinet appears healthy with remote mode selected. AI would verify local indications and remote commands remain consistent.",evidence:["Selector is in remote","No panel alarm","Local/remote health normal"],actions:["Verify local/remote selector logic","Confirm lamp and indicator status","Check control power health","Confirm remote control permissives"],consequence:"Control-cabinet mismatches can create operational confusion even if the breaker itself is healthy."},
+PROTECTION:{title:"Protection interface is healthy",confidence:"High",assessment:"Trip circuits and status indications appear healthy. AI notes that some local detail is not fully summarized remotely.",evidence:["Trip circuits healthy","52a/52b normal","No trip circuit alarm"],actions:["Verify trip circuit supervision end-to-end","Check event and SOE mapping","Confirm remote visibility of key alarms","Review logic for gas alarm vs lockout"],consequence:"Protection may be technically healthy while operators still lack enough context if alarm summaries are incomplete."},
+CONDITION_MON:{title:"Condition monitoring indicates maintenance planning need",confidence:"High",assessment:"Condition monitoring combines SF6, contact wear, and operation count and points to follow-up planning rather than immediate outage.",evidence:["Gas trend is being monitored","Contact wear estimate is increasing","Operation count is elevated"],actions:["Review all three trends together","Compare against OEM threshold logic","Plan inspection scope","Escalate if any trend worsens materially"],consequence:"Trend interpretation is where the digital twin becomes useful: isolated alarms become a clearer maintenance decision."},
+SCADA:{title:"SCADA is healthy but summary visibility can improve",confidence:"Medium",assessment:"Remote indication is healthy, but some maintenance detail is still more visible locally than remotely. AI flags this as an operations-readiness gap rather than a communications failure.",evidence:["Gateway is online","Remote indication is healthy","Some maintenance detail only visible locally"],actions:["Review point list completeness","Confirm alarm text quality","Map condition-monitoring summary points","Verify event retrieval workflow"],consequence:"A healthy gateway alone does not mean operators see the right maintenance warning context."}
+};
+var metricOrder=[["Status","status"],["Voltage","voltage"],["Current","current"],["Power","power"],["Health","health"],["Temperature","temp"],["Condition","condition"],["Comms","comms"]];
+function esc(v){return String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;")}function ge(id){return document.getElementById(id)}function confClass(c){return c==="High"?"risk-low":c==="Medium"?"risk-medium":"risk-high"}function renderMetrics(a){var h="";for(var i=0;i<metricOrder.length;i++){h+='<div class="metric"><div class="metric-label">'+esc(metricOrder[i][0])+'</div><div class="metric-value">'+esc(a[metricOrder[i][1]])+'</div></div>'}ge("metrics").innerHTML=h}function renderList(id,items,tag){var h="";for(var i=0;i<items.length;i++){h+="<"+tag+">"+esc(items[i])+"</"+tag+">"}ge(id).innerHTML=h}
+function setSelected(id){var asset=assetData[id],insight=aiInsights[id];if(!asset||!insight)return;var sel=document.querySelectorAll(".selected");for(var i=0;i<sel.length;i++)sel[i].classList.remove("selected");var g=document.querySelector('[data-id="'+id+'"]');if(g)g.classList.add("selected");ge("asset-name").textContent=asset.name;ge("asset-type").textContent=asset.type;var rb=ge("risk-badge");rb.textContent=asset.risk+" Risk";rb.className="badge risk-"+asset.risk.toLowerCase();renderMetrics(asset);renderList("alarms",asset.alarms,"div");var nodes=ge("alarms").children;for(var j=0;j<nodes.length;j++)nodes[j].className="alarm";ge("owner-box").innerHTML="<strong>Data owner:</strong> "+esc(asset.owner);ge("last-update").textContent="Last update: simulated live data - "+(Math.floor(Math.random()*5)+1)+" seconds ago";ge("ai-title").textContent=insight.title;var c=ge("ai-confidence");c.textContent=insight.confidence+" Confidence";c.className="badge "+confClass(insight.confidence);ge("ai-assessment").textContent=insight.assessment;renderList("ai-evidence",insight.evidence,"li");renderList("ai-actions",insight.actions,"li");ge("ai-consequence").textContent=insight.consequence;ge("ai-answer").textContent="Try asking about SF6, contact wear, operations count, spring mechanism, trip circuit, or maintenance risk."}
+function currentId(){var s=document.querySelector(".selected");return s&&s.getAttribute("data-id")?s.getAttribute("data-id"):"LINE_SIDE"}function answerQuestion(){var id=currentId(),asset=assetData[id],insight=aiInsights[id],q=ge("ai-question").value.toLowerCase();var ans="This demo uses rule-based AI-style responses. In a production GIS breaker twin, this would call a governed AI service with citations to SCADA, operation counters, SF6 trend data, timing tests, maintenance records, and OEM guidance.";if(!asset||!insight)return;if(q.indexOf("sf6")>=0||q.indexOf("gas")>=0||q.indexOf("density")>=0)ans=asset.name+": GIS gas review should look at current density, temperature compensation, rate-of-change, leakage indicators, and alarm/lockout thresholds. In this demo, SF6 density is the most important health signal.";else if(q.indexOf("wear")>=0||q.indexOf("contact")>=0)ans=asset.name+": contact wear review should consider interruption history, timing tests, manufacturer thresholds, and current wear estimate. The demo indicates maintenance planning value, not immediate unavailability.";else if(q.indexOf("spring")>=0||q.indexOf("mechanism")>=0||q.indexOf("operation")>=0)ans=asset.name+": mechanism review should verify spring charge state, operation count, timing test history, trip/close coil performance, and maintenance interval.";else if(q.indexOf("trip")>=0||q.indexOf("protection")>=0||q.indexOf("alarm")>=0)ans=asset.name+": protection review should verify trip circuit supervision, 52a/52b status, alarm visibility, and event records.";else if(q.indexOf("healthy")>=0||q.indexOf("duty")>=0||q.indexOf("ready")>=0)ans=asset.name+": the breaker is operable in this demo, but gas density margin and wear/mechanical trends mean it should be under follow-up attention.";else if(q.indexOf("risk")>=0||q.indexOf("why")>=0)ans=asset.name+": risk is "+asset.risk+". AI assessment: "+insight.assessment;ge("ai-answer").textContent=ans}
+function runSelfTests(){var ids=Object.keys(assetData),m=[];for(var i=0;i<ids.length;i++){if(!document.querySelector('[data-id="'+ids[i]+'"]'))m.push(ids[i]+" has no SVG object");if(!aiInsights[ids[i]])m.push(ids[i]+" has no AI insight")}setSelected("SF6_MONITOR");var sf6Ok=ge("asset-name").textContent==="SF6 Density Monitor";setSelected("LINE_SIDE");var startOk=ge("asset-name").textContent==="115 kV Line Side";if(!sf6Ok)m.push("SF6_MONITOR selection test failed");if(!startOk)m.push("LINE_SIDE selection test failed");var st=ge("test-status");if(m.length===0){st.textContent="Self-tests passed: all assets have SVG objects, AI insights, and working selection behavior.";st.style.color="#166534";st.style.background="#dcfce7";st.style.borderColor="#bbf7d0"}else{st.textContent="Self-tests found issues: "+m.join("; ");st.style.color="#991b1b";st.style.background="#fee2e2";st.style.borderColor="#fecaca"}}
+function init(){var items=document.querySelectorAll("[data-id]");for(var i=0;i<items.length;i++){items[i].addEventListener("click",function(e){setSelected(e.currentTarget.getAttribute("data-id"))})}ge("ai-ask-button").addEventListener("click",answerQuestion);ge("ai-question").addEventListener("keydown",function(e){if(e.key==="Enter")answerQuestion()});setSelected("LINE_SIDE");runSelfTests()}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+}());
+</script>
+</body>
+</html>

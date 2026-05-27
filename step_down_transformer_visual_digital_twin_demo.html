@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>115 kV / 13.8 kV Transformer Digital Twin Demo</title>
+  <style>
+    :root {
+      --bg:#f1f5f9; --card:#fff; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
+      --blue:#2563eb; --green:#16a34a; --yellow:#ca8a04; --red:#dc2626; --line:#334155;
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);padding:24px}
+    .container{max-width:1540px;margin:0 auto}.eyebrow{color:var(--blue);font-weight:800;font-size:14px;margin:0 0 6px}h1{font-size:34px;line-height:1.1;margin:0}h2{font-size:22px;margin:0}h3{margin:0}.subtitle{color:var(--muted);max-width:1080px;line-height:1.5;margin-top:10px}.grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(420px,1fr);gap:24px;margin-top:24px}.card{background:var(--card);border:1px solid var(--border);border-radius:22px;box-shadow:0 8px 24px rgba(15,23,42,.05);padding:20px}.card-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.small{color:var(--muted);font-size:14px;margin-top:4px}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.legend-item{display:flex;align-items:center;gap:6px}.dot{width:12px;height:12px;border-radius:999px;display:inline-block}svg{width:100%;height:820px;background:#f8fafc;border:1px solid var(--border);border-radius:18px}.clickable{cursor:pointer}.clickable:hover text{fill:var(--blue);font-weight:800}.selected .select-stroke{stroke:var(--blue)!important;stroke-width:12!important}.selected .select-fill{stroke:var(--blue)!important;stroke-width:4!important;fill:#dbeafe!important}.panel-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}.badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 10px;font-size:13px;border:1px solid;white-space:nowrap;font-weight:800}.risk-low{background:#dcfce7;color:#166534;border-color:#bbf7d0}.risk-medium{background:#fef9c3;color:#854d0e;border-color:#fde68a}.risk-high{background:#fee2e2;color:#991b1b;border-color:#fecaca}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.metric{background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px;min-height:72px}.metric-label{color:var(--muted);font-size:12px}.metric-value{font-weight:800;margin-top:6px}.section{margin-top:22px}.alarm-list{display:grid;gap:8px;margin-top:10px}.alarm{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:10px;font-size:14px}.owner-box{margin-top:16px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:12px;border-radius:14px;font-size:14px}.ai-panel{border-top:1px solid var(--border);padding-top:18px}.ai-header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.ai-box{background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:10px;font-size:14px}.ai-box p{margin:6px 0 0;color:#334155;line-height:1.45}.ai-box ul,.ai-box ol{margin:8px 0 0;padding-left:20px;color:#334155;line-height:1.45}.ai-label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;font-weight:800}.consequence{background:#fff7ed;border-color:#fed7aa}.ask-ai{margin-top:14px;display:grid;gap:8px}.ask-ai label{font-size:13px;font-weight:800;color:#334155}.ask-ai input{border:1px solid var(--border);border-radius:12px;padding:11px 12px;font-size:14px;outline:none}.ask-ai input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #dbeafe}.ask-ai button{border:0;border-radius:12px;background:var(--blue);color:white;padding:10px 12px;font-weight:800;cursor:pointer}.ai-answer{margin-top:10px;background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;border-radius:14px;padding:12px;font-size:14px;line-height:1.45}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;border-bottom:1px solid var(--border);padding:10px 8px;vertical-align:top}th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}.test-status{margin-top:16px;font-size:13px;color:#166534;background:#dcfce7;border:1px solid #bbf7d0;border-radius:12px;padding:10px}.footer-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:24px}.info-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(15,23,42,.04)}.info-card p{color:var(--muted);font-size:14px;line-height:1.45;margin-bottom:0}@media(max-width:1150px){.grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:720px){body{padding:14px}h1{font-size:26px}.footer-grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr}svg{height:650px}}
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <p class="eyebrow">Substation Transformer Digital Twin Prototype</p>
+    <h1>Drawn 115 kV / 13.8 kV Step-Down Transformer Twin</h1>
+    <p class="subtitle">This version replaces the block-style transformer with a more recognizable transformer drawing: main tank, core-and-winding cutaway, HV/LV bushings, conservator, Buchholz relay, radiators, fans, LTC cabinet, pressure relief device, DGA monitor, temperature monitor, protection, and connected HV/LV buses. Demo rating: <strong>25/33/42 MVA, ONAN/ONAF/ONAF</strong>.</p>
+  </header>
+
+  <main class="grid">
+    <section class="card">
+      <div class="card-header">
+        <div><h2>Interactive Transformer Assembly</h2><p class="small">Click the transformer parts, monitors, breakers, or buses.</p></div>
+        <div class="legend"><span class="legend-item"><span class="dot" style="background:#16a34a"></span>Normal</span><span class="legend-item"><span class="dot" style="background:#ca8a04"></span>Attention</span><span class="legend-item"><span class="dot" style="background:#dc2626"></span>Alarm</span></div>
+      </div>
+
+      <svg viewBox="0 0 1240 860" aria-label="Drawn transformer digital twin diagram">
+        <defs>
+          <linearGradient id="tankGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#e2e8f0"/></linearGradient>
+          <linearGradient id="oilGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fef3c7"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient>
+          <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.13"/></filter>
+        </defs>
+
+        <!-- 115 kV source and bus -->
+        <g class="clickable device selected" data-id="SOURCE115">
+          <rect class="select-fill" x="55" y="65" width="160" height="62" rx="14" fill="white" stroke="#334155" stroke-width="2"/>
+          <text x="135" y="92" text-anchor="middle" font-size="13">115 kV Source</text><text x="135" y="113" text-anchor="middle" font-size="11" fill="#64748b">Transmission Supply</text><circle cx="200" cy="78" r="7" fill="#16a34a"/>
+        </g>
+        <line x1="215" y1="96" x2="300" y2="96" stroke="#334155" stroke-width="4"/>
+        <g class="clickable breaker" data-id="HV_BREAKER"><rect class="select-fill" x="300" y="76" width="54" height="40" rx="7" fill="white" stroke="#334155" stroke-width="2"/><line x1="311" y1="109" x2="342" y2="85" stroke="#16a34a" stroke-width="4"/><text x="327" y="141" text-anchor="middle" font-size="12">HV CB</text></g>
+        <line x1="354" y1="96" x2="450" y2="96" stroke="#334155" stroke-width="4"/>
+        <g class="clickable bus" data-id="HV_BUS"><line class="select-stroke" x1="450" y1="96" x2="650" y2="96" stroke="#111827" stroke-width="8" stroke-linecap="round"/><text x="550" y="72" text-anchor="middle" font-size="14">115 kV Bus</text><circle cx="668" cy="96" r="7" fill="#16a34a"/></g>
+
+        <!-- HV drops to bushings -->
+        <line x1="645" y1="96" x2="710" y2="96" stroke="#334155" stroke-width="4"/>
+        <line x1="710" y1="96" x2="710" y2="185" stroke="#334155" stroke-width="4"/>
+
+        <!-- Conservator, pipe, Buchholz -->
+        <g class="clickable device" data-id="CONSERVATOR">
+          <ellipse class="select-fill" cx="745" cy="175" rx="122" ry="34" fill="white" stroke="#334155" stroke-width="2"/>
+          <rect x="623" y="175" width="244" height="20" fill="white" stroke="#334155" stroke-width="0"/>
+          <path d="M623 175 A122 34 0 0 0 867 175" fill="none" stroke="#334155" stroke-width="2"/>
+          <path d="M623 195 A122 34 0 0 0 867 195" fill="none" stroke="#334155" stroke-width="2"/>
+          <text x="745" y="181" text-anchor="middle" font-size="13">Conservator Tank</text><text x="745" y="202" text-anchor="middle" font-size="11" fill="#64748b">Oil level 63%</text><circle cx="842" cy="158" r="7" fill="#16a34a"/>
+        </g>
+        <line x1="745" y1="210" x2="745" y2="252" stroke="#334155" stroke-width="4"/>
+        <g class="clickable device" data-id="BUCHHOLZ"><rect class="select-fill" x="705" y="252" width="80" height="38" rx="9" fill="white" stroke="#334155" stroke-width="2"/><text x="745" y="275" text-anchor="middle" font-size="11">Buchholz 63</text></g>
+        <line x1="745" y1="290" x2="745" y2="330" stroke="#334155" stroke-width="4"/>
+
+        <!-- Main drawn transformer tank -->
+        <g class="clickable transformer" data-id="MAIN_TANK">
+          <path class="select-fill" d="M455 330 L1015 330 Q1040 330 1040 355 L1040 585 Q1040 610 1015 610 L455 610 Q430 610 430 585 L430 355 Q430 330 455 330 Z" fill="url(#tankGrad)" stroke="#334155" stroke-width="3" filter="url(#softShadow)"/>
+          <path d="M455 350 L1015 350 Q1020 350 1020 355 L1020 395 L450 395 L450 355 Q450 350 455 350 Z" fill="url(#oilGrad)" opacity="0.32"/>
+          <text x="735" y="365" text-anchor="middle" font-size="17" font-weight="800">115 kV / 13.8 kV Power Transformer</text>
+          <text x="735" y="387" text-anchor="middle" font-size="12" fill="#64748b">25/33/42 MVA • ONAN / ONAF / ONAF • Mineral Oil • LTC</text>
+          <circle cx="1015" cy="350" r="7" fill="#ca8a04"/>
+        </g>
+
+        <!-- cutaway core and windings -->
+        <g class="clickable device" data-id="CORE_WINDINGS">
+          <rect class="select-fill" x="505" y="420" width="260" height="145" rx="18" fill="#fff" stroke="#334155" stroke-width="2"/>
+          <rect x="540" y="450" width="42" height="86" rx="10" fill="#cbd5e1" stroke="#334155" stroke-width="2"/>
+          <rect x="615" y="450" width="42" height="86" rx="10" fill="#cbd5e1" stroke="#334155" stroke-width="2"/>
+          <rect x="690" y="450" width="42" height="86" rx="10" fill="#cbd5e1" stroke="#334155" stroke-width="2"/>
+          <path d="M530 462 q32 -24 64 0 q32 24 64 0 q32 -24 64 0" fill="none" stroke="#f59e0b" stroke-width="5"/>
+          <path d="M530 500 q32 -24 64 0 q32 24 64 0 q32 -24 64 0" fill="none" stroke="#f59e0b" stroke-width="5"/>
+          <text x="635" y="443" text-anchor="middle" font-size="13">Core & Windings Cutaway</text><text x="635" y="555" text-anchor="middle" font-size="11" fill="#64748b">Hot-spot 96 C • insulation aging watch</text><circle cx="742" cy="435" r="7" fill="#ca8a04"/>
+        </g>
+
+        <!-- LTC cabinet drawn on side -->
+        <g class="clickable device" data-id="LTC">
+          <rect class="select-fill" x="795" y="420" width="135" height="145" rx="16" fill="#fff" stroke="#334155" stroke-width="2"/>
+          <circle cx="862" cy="470" r="31" fill="#e2e8f0" stroke="#334155" stroke-width="2"/>
+          <path d="M862 470 L862 444" stroke="#334155" stroke-width="3"/><path d="M862 470 L885 484" stroke="#334155" stroke-width="3"/><path d="M862 470 L839 484" stroke="#334155" stroke-width="3"/>
+          <text x="862" y="443" text-anchor="middle" font-size="13">LTC</text><text x="862" y="532" text-anchor="middle" font-size="11" fill="#64748b">Tap +3</text><text x="862" y="550" text-anchor="middle" font-size="11" fill="#64748b">Ops count elevated</text><circle cx="912" cy="435" r="7" fill="#ca8a04"/>
+        </g>
+
+        <!-- HV bushings: porcelain stacks -->
+        <g class="clickable device" data-id="HV_BUSHINGS">
+          <g transform="translate(560 284)"><line x1="0" y1="46" x2="0" y2="0" stroke="#334155" stroke-width="4"/><ellipse cx="0" cy="8" rx="17" ry="5" fill="#e2e8f0" stroke="#334155"/><ellipse cx="0" cy="19" rx="19" ry="5" fill="#e2e8f0" stroke="#334155"/><ellipse cx="0" cy="30" rx="17" ry="5" fill="#e2e8f0" stroke="#334155"/></g>
+          <g transform="translate(620 284)"><line x1="0" y1="46" x2="0" y2="0" stroke="#334155" stroke-width="4"/><ellipse cx="0" cy="8" rx="17" ry="5" fill="#e2e8f0" stroke="#334155"/><ellipse cx="0" cy="19" rx="19" ry="5" fill="#e2e8f0" stroke="#334155"/><ellipse cx="0" cy="30" rx="17" ry="5" fill="#e2e8f0" stroke="#334155"/></g>
+          <g transform="translate(680 284)"><line x1="0" y1="46" x2="0" y2="0" stroke="#334155" stroke-width="4"/><ellipse cx="0" cy="8" rx="17" ry="5" fill="#e2e8f0" stroke="#334155"/><ellipse cx="0" cy="19" rx="19" ry="5" fill="#e2e8f0" stroke="#334155"/><ellipse cx="0" cy="30" rx="17" ry="5" fill="#e2e8f0" stroke="#334155"/></g>
+          <text x="620" y="270" text-anchor="middle" font-size="12">HV Bushings</text><circle cx="705" cy="292" r="7" fill="#16a34a"/>
+        </g>
+        <line x1="710" y1="185" x2="620" y2="284" stroke="#334155" stroke-width="4"/>
+
+        <!-- PRD -->
+        <g class="clickable device" data-id="PRD"><path class="select-fill" d="M940 300 l32 0 l18 30 l-68 0 z" fill="white" stroke="#334155" stroke-width="2"/><text x="956" y="322" text-anchor="middle" font-size="11">PRD</text><circle cx="985" cy="305" r="7" fill="#16a34a"/></g>
+        <line x1="956" y1="330" x2="956" y2="350" stroke="#334155" stroke-width="4"/>
+
+        <!-- radiators and fans more drawn -->
+        <g class="clickable device" data-id="COOLING">
+          <rect class="select-fill" x="1065" y="350" width="110" height="220" rx="16" fill="white" stroke="#334155" stroke-width="2"/>
+          <text x="1120" y="376" text-anchor="middle" font-size="13">Radiators</text>
+          <g stroke="#334155" stroke-width="2"><line x1="1088" y1="395" x2="1088" y2="540"/><line x1="1105" y1="395" x2="1105" y2="540"/><line x1="1122" y1="395" x2="1122" y2="540"/><line x1="1139" y1="395" x2="1139" y2="540"/><line x1="1156" y1="395" x2="1156" y2="540"/></g>
+          <circle cx="1102" cy="585" r="21" fill="#e2e8f0" stroke="#334155" stroke-width="2"/><path d="M1102 585 l0 -16 M1102 585 l15 8 M1102 585 l-15 8" stroke="#334155" stroke-width="2"/>
+          <circle cx="1148" cy="585" r="21" fill="#e2e8f0" stroke="#334155" stroke-width="2"/><path d="M1148 585 l0 -16 M1148 585 l15 8 M1148 585 l-15 8" stroke="#334155" stroke-width="2"/>
+          <text x="1120" y="625" text-anchor="middle" font-size="11" fill="#64748b">2 of 4 fans running</text><circle cx="1158" cy="363" r="7" fill="#ca8a04"/>
+        </g>
+        <line x1="1040" y1="445" x2="1065" y2="445" stroke="#334155" stroke-width="4"/>
+
+        <!-- monitors -->
+        <g class="clickable device" data-id="DGA_MON"><rect class="select-fill" x="430" y="650" width="178" height="60" rx="14" fill="white" stroke="#334155" stroke-width="2"/><text x="519" y="675" text-anchor="middle" font-size="13">Online DGA</text><text x="519" y="694" text-anchor="middle" font-size="11" fill="#64748b">H2 / C2H4 trend watch</text><circle cx="588" cy="663" r="7" fill="#dc2626"/></g>
+        <g class="clickable device" data-id="TEMP_MON"><rect class="select-fill" x="635" y="650" width="178" height="60" rx="14" fill="white" stroke="#334155" stroke-width="2"/><text x="724" y="675" text-anchor="middle" font-size="13">Temperature Monitor</text><text x="724" y="694" text-anchor="middle" font-size="11" fill="#64748b">Top oil / WTI</text><circle cx="793" cy="663" r="7" fill="#ca8a04"/></g>
+        <g class="clickable device" data-id="PROTECTION"><rect class="select-fill" x="840" y="650" width="190" height="60" rx="14" fill="white" stroke="#334155" stroke-width="2"/><text x="935" y="675" text-anchor="middle" font-size="13">Transformer Protection</text><text x="935" y="694" text-anchor="middle" font-size="11" fill="#64748b">87T / 63 / 49 / PRD</text><circle cx="1010" cy="663" r="7" fill="#16a34a"/></g>
+        <line x1="519" y1="650" x2="620" y2="565" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7"/><line x1="724" y1="650" x2="650" y2="565" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7"/><line x1="935" y1="650" x2="862" y2="565" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7"/>
+
+        <!-- LV bushings and bus -->
+        <g class="clickable device" data-id="LV_BUSHINGS">
+          <g transform="translate(900 610)"><line x1="0" y1="0" x2="0" y2="55" stroke="#334155" stroke-width="4"/><ellipse cx="0" cy="12" rx="16" ry="5" fill="#e2e8f0" stroke="#334155"/><ellipse cx="0" cy="25" rx="18" ry="5" fill="#e2e8f0" stroke="#334155"/><ellipse cx="0" cy="38" rx="16" ry="5" fill="#e2e8f0" stroke="#334155"/></g>
+          <g transform="translate(960 610)"><line x1="0" y1="0" x2="0" y2="55" stroke="#334155" stroke-width="4"/><ellipse cx="0" cy="12" rx="16" ry="5" fill="#e2e8f0" stroke="#334155"/><ellipse cx="0" cy="25" rx="18" ry="5" fill="#e2e8f0" stroke="#334155"/><ellipse cx="0" cy="38" rx="16" ry="5" fill="#e2e8f0" stroke="#334155"/></g>
+          <text x="930" y="635" text-anchor="middle" font-size="12">LV Bushings</text><circle cx="980" cy="620" r="7" fill="#16a34a"/>
+        </g>
+        <line x1="930" y1="665" x2="930" y2="760" stroke="#334155" stroke-width="4"/>
+        <line x1="930" y1="760" x2="1030" y2="760" stroke="#334155" stroke-width="4"/>
+        <g class="clickable bus" data-id="LV_BUS"><line class="select-stroke" x1="1030" y1="760" x2="1180" y2="760" stroke="#111827" stroke-width="8" stroke-linecap="round"/><text x="1105" y="736" text-anchor="middle" font-size="14">13.8 kV Bus</text><circle cx="1195" cy="760" r="7" fill="#16a34a"/></g>
+      </svg>
+    </section>
+
+    <aside class="card" id="asset-panel">
+      <div class="panel-top"><div><p class="small" style="margin:0">Selected Asset</p><h2 id="asset-name">115 kV Source</h2><p class="small" id="asset-type">Incoming Source</p></div><span id="risk-badge" class="badge risk-low">Low Risk</span></div>
+      <div class="metrics" id="metrics"></div>
+      <div class="section"><h3>Active Alarms / Notes</h3><div class="alarm-list" id="alarms"></div></div>
+      <div class="owner-box" id="owner-box"><strong>Data owner:</strong> Substation Operations</div><p class="small" id="last-update">Last update: simulated live data</p>
+      <div class="section ai-panel"><div class="ai-header"><div><p class="eyebrow" style="margin:0">AI Transformer Health Assistant</p><h3 id="ai-title">Asset assessment</h3></div><span id="ai-confidence" class="badge risk-medium">Medium Confidence</span></div><div class="ai-box"><div class="ai-label">Assessment</div><p id="ai-assessment"></p></div><div class="ai-box"><div class="ai-label">Evidence Used</div><ul id="ai-evidence"></ul></div><div class="ai-box"><div class="ai-label">Recommended Next Checks</div><ol id="ai-actions"></ol></div><div class="ai-box consequence"><div class="ai-label">Asset / Operations / Maintenance Consequence</div><p id="ai-consequence"></p></div><div class="ask-ai"><label for="ai-question">Ask the twin</label><input id="ai-question" type="text" placeholder="Example: Is the transformer healthy enough for peak loading?"/><button id="ai-ask-button" type="button">Ask</button></div><div id="ai-answer" class="ai-answer">Try asking about DGA, oil temperature, tap changer condition, loading, cooling, or maintenance risk.</div></div>
+    </aside>
+  </main>
+
+  <section class="card" style="margin-top:24px"><h2>Transformer Health / Execution Risk Checks</h2><p class="small">A useful transformer twin should expose issues before they become forced outages, insulation damage, LTC failures, cooling limits, or missed condition-monitoring alarms.</p><div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>ID</th><th>Category</th><th>Issue</th><th>Consequence</th><th>Severity</th></tr></thead><tbody><tr><td>TX-001</td><td>Condition</td><td>DGA monitor shows rising ethylene and hydrogen trend</td><td>Potential thermal fault progression if trend is not investigated</td><td>High</td></tr><tr><td>TX-002</td><td>Cooling</td><td>Cooling stage 1 is active at moderate load</td><td>Reduced thermal margin during peak demand</td><td>Medium</td></tr><tr><td>TX-003</td><td>Maintenance</td><td>LTC operation count is elevated since last inspection</td><td>Wear-related contact problems or delayed tap response</td><td>Medium</td></tr><tr><td>TX-004</td><td>Monitoring</td><td>Some condition signals are not fully summarized for operators</td><td>Early warning may be missed</td><td>Medium</td></tr></tbody></table></div><div class="test-status" id="test-status">Self-tests not run yet.</div></section>
+
+  <section class="footer-grid"><div class="info-card"><h3>Operations</h3><p>Click the transformer assembly and see load, temperatures, tap position, cooling stage, alarms, and voltage status.</p></div><div class="info-card"><h3>Maintenance</h3><p>Track DGA trends, LTC wear, oil condition, cooling performance, bushing condition, and inspection priority.</p></div><div class="info-card"><h3>Engineering</h3><p>Compare loading, nameplate rating, protection status, monitor points, and health trends against design intent.</p></div><div class="info-card"><h3>Manager Value</h3><p>Reduces late discovery of condition issues and gives clearer evidence for maintenance and replacement decisions.</p></div></section>
+</div>
+
+<script>
+(function(){"use strict";
+var assetData={
+SOURCE115:{name:"115 kV Source",type:"Incoming Source",status:"Available",voltage:"115.8 kV",current:"182 A",power:"31.2 MVA",health:"Stable source",temp:"N/A",condition:"Normal",comms:"Healthy",alarms:["None"],owner:"Substation Operations",risk:"Low"},
+HV_BREAKER:{name:"HV Breaker",type:"115 kV Circuit Breaker",status:"Closed",voltage:"115.8 kV",current:"182 A",power:"31.2 MVA",health:"Trip circuit healthy",temp:"42 C",condition:"Spring charged",comms:"Healthy",alarms:["No breaker alarm"],owner:"Substation Operations",risk:"Low"},
+HV_BUS:{name:"115 kV Bus",type:"High-Side Bus",status:"Energized",voltage:"115.8 kV",current:"182 A",power:"31.2 MVA",health:"Normal",temp:"N/A",condition:"Bus voltage within band",comms:"Healthy",alarms:["None"],owner:"Substation Operations",risk:"Low"},
+MAIN_TANK:{name:"Main Transformer Tank",type:"Power Transformer",status:"In service / Attention",voltage:"115 / 13.8 kV",current:"182 A HV / 1306 A LV",power:"31.2 MVA",health:"Thermal and gas trend needs follow-up",temp:"Top oil 78 C",condition:"Load 75% of 42 MVA fan-assisted rating",comms:"Healthy",alarms:["DGA trend watch active","Cooling stage 1 active"],owner:"Transformer Asset Management",risk:"Medium"},
+CORE_WINDINGS:{name:"Core & Windings",type:"Internal Active Part",status:"Attention",voltage:"Magnetic core energized",current:"Load dependent",power:"31.2 MVA throughput",health:"Hot-spot trend elevated",temp:"Winding hot-spot 96 C",condition:"Estimated insulation aging accelerated",comms:"Derived / monitored",alarms:["Winding temperature watch"],owner:"Transformer Asset Management",risk:"Medium"},
+LTC:{name:"Load Tap Changer",type:"On-Load Tap Changer",status:"Available",voltage:"HV regulating",current:"Load dependent",power:"Tap position supports 13.8 kV regulation",health:"Operation count elevated but stable",temp:"Compartment oil 58 C",condition:"Tap position +3",comms:"Healthy",alarms:["Maintenance interval approaching"],owner:"Transformer Maintenance",risk:"Medium"},
+HV_BUSHINGS:{name:"HV Bushings",type:"115 kV Bushings",status:"Normal",voltage:"115.8 kV",current:"182 A",power:"31.2 MVA throughput",health:"Capacitance/power factor normal",temp:"Bushing top 46 C",condition:"No leakage noted",comms:"Healthy",alarms:["None"],owner:"Substation Maintenance",risk:"Low"},
+LV_BUSHINGS:{name:"LV Bushings",type:"13.8 kV Bushings",status:"Normal",voltage:"13.9 kV",current:"1306 A",power:"31.2 MVA throughput",health:"Normal",temp:"Bushing top 49 C",condition:"No visible issues",comms:"Healthy",alarms:["None"],owner:"Substation Maintenance",risk:"Low"},
+CONSERVATOR:{name:"Conservator",type:"Oil Preservation System",status:"Normal",voltage:"N/A",current:"N/A",power:"N/A",health:"Oil level adequate",temp:"Oil temp 54 C",condition:"Oil level 63%",comms:"Healthy",alarms:["No low-oil alarm"],owner:"Transformer Maintenance",risk:"Low"},
+BUCHHOLZ:{name:"Buchholz Relay",type:"Gas / Surge Relay",status:"Healthy",voltage:"N/A",current:"N/A",power:"N/A",health:"No alarm / no trip",temp:"N/A",condition:"Normal",comms:"Healthy",alarms:["No gas accumulation alarm"],owner:"Protection & Control",risk:"Low"},
+COOLING:{name:"Radiators & Cooling Fans",type:"Cooling System",status:"Attention",voltage:"480 Vac aux",current:"Fan group running",power:"Cooling stage 1",health:"Cooling available",temp:"Inlet oil 72 C / outlet oil 67 C",condition:"2 of 4 fan groups running",comms:"Healthy",alarms:["Cooling stage 1 active earlier than normal seasonal expectation"],owner:"Transformer Maintenance",risk:"Medium"},
+PRD:{name:"Pressure Relief Device",type:"PRD",status:"Healthy",voltage:"N/A",current:"N/A",power:"N/A",health:"No operation",temp:"N/A",condition:"Reset / normal",comms:"Healthy",alarms:["None"],owner:"Protection & Control",risk:"Low"},
+DGA_MON:{name:"Online DGA Monitor",type:"Dissolved Gas Analysis Monitor",status:"Attention",voltage:"N/A",current:"N/A",power:"N/A",health:"Rising thermal gas trend",temp:"Oil sample temp 56 C",condition:"H2 180 ppm, C2H4 82 ppm, CH4 96 ppm, CO 420 ppm, C2H2 1 ppm",comms:"Healthy",alarms:["Ethylene and hydrogen trend rising"],owner:"Asset Monitoring",risk:"High"},
+TEMP_MON:{name:"Temperature Monitor",type:"OTI / WTI Monitor",status:"Attention",voltage:"N/A",current:"N/A",power:"N/A",health:"Top oil and WTI elevated",temp:"Top oil 78 C / WTI 96 C",condition:"Alarm margin remaining",comms:"Healthy",alarms:["Winding temperature watch","Cooling stage active"],owner:"Asset Monitoring",risk:"Medium"},
+PROTECTION:{name:"Transformer Protection",type:"87T / 63 / 49 / sudden pressure",status:"Healthy",voltage:"Relay panel normal",current:"N/A",power:"N/A",health:"No trip, no lockout",temp:"Panel 30 C",condition:"All key protections in service",comms:"Healthy",alarms:["Some monitor detail not shown in operator summary"],owner:"Protection & Control",risk:"Low"},
+LV_BUS:{name:"13.8 kV Bus",type:"Low-Side Bus",status:"Energized",voltage:"13.9 kV",current:"1306 A",power:"31.2 MVA",health:"Normal",temp:"N/A",condition:"Voltage regulated by LTC",comms:"Healthy",alarms:["None"],owner:"Distribution Operations",risk:"Low"}
+};
+var defaultInsight={title:"Transformer asset is operating with monitored condition data",confidence:"Medium",assessment:"This asset is part of the transformer digital twin. The model links operating state, condition-monitoring data, protection status, and maintenance consequence so the user does not have to infer transformer health from scattered systems.",evidence:["Asset status and telemetry are available","Alarms are visible in the selected asset panel","Owner and risk level are defined"],actions:["Verify source data and SCADA mapping","Review trend history, not only the latest value","Confirm alarms are included in operator displays","Link maintenance evidence to the asset record"],consequence:"A visible but unverified signal can still create operational uncertainty. The twin should preserve source, owner, confidence, and action context."};
+var aiInsights={
+MAIN_TANK:{title:"Transformer tank condition needs follow-up",confidence:"High",assessment:"The transformer is in service and carrying significant load, but thermal behavior and gas trends suggest attention is warranted. This is not an immediate trip condition, but it is not a do-nothing condition either.",evidence:["Top oil is 78 C","Load is about 75% of fan-assisted rating","Cooling stage 1 active","DGA trend watch active"],actions:["Trend top-oil and winding temperature against ambient and load","Review recent DGA trend rate","Check cooling stage sequencing and fan performance","Confirm peak-day thermal margin"],consequence:"If ignored, the unit may lose thermal margin during peak demand and accelerate insulation aging."},
+CORE_WINDINGS:{title:"Winding temperature suggests moderate thermal stress",confidence:"High",assessment:"The active part is showing elevated winding hot-spot temperature. AI interprets this as a thermal-aging concern rather than a present internal fault, assuming no differential or sudden-pressure activity.",evidence:["Winding hot-spot is 96 C","Winding temperature watch alarm is active","No protection trip is active"],actions:["Review WTI calibration and sensor validity","Correlate hot-spot with load profile","Estimate accelerated aging factor","Check cooling effectiveness"],consequence:"Repeated high hot-spot operation reduces insulation life and narrows emergency overload flexibility."},
+LTC:{title:"LTC is regulating but maintenance interval is approaching",confidence:"High",assessment:"The LTC is holding the 13.8 kV bus at tap +3. Elevated operation count suggests wear should be tracked before it becomes a reliability issue.",evidence:["Tap position is +3","Voltage regulation appears effective","Maintenance interval approaching"],actions:["Review total operation count since last inspection","Trend tap movement frequency","Check motor-drive current signature","Plan inspection window if threshold is near"],consequence:"LTC problems often start as maintenance issues and later become voltage-control or forced-outage issues."},
+DGA_MON:{title:"DGA trend is the most important current health signal",confidence:"High",assessment:"Rising hydrogen and ethylene with very low acetylene is more consistent with developing thermal stress than high-energy arcing in this demo.",evidence:["H2 is 180 ppm","C2H4 is 82 ppm","CH4 is 96 ppm","C2H2 remains low at 1 ppm","Trend is rising"],actions:["Review rate-of-change over the last 30 to 90 days","Compare with lab DGA results","Check whether thermal hotspot conditions align with gas rise","Consider verification oil sample"],consequence:"Ignoring gas trend data can allow a manageable condition issue to progress into a major outage."},
+COOLING:{title:"Cooling system is available but should be reviewed",confidence:"High",assessment:"Cooling equipment is functioning, but stage 1 operation at this loading suggests reduced thermal margin or ambient sensitivity.",evidence:["Cooling stage 1 active","2 of 4 fan groups running","Transformer is around 75% of fan-assisted rating"],actions:["Compare fan staging to seasonal norm","Check fan motor and controls","Verify radiator performance and oil flow","Inspect fan group availability"],consequence:"If cooling performance is degraded, peak loading flexibility and transformer life both suffer."},
+TEMP_MON:{title:"Temperature monitor indicates elevated but manageable thermal condition",confidence:"High",assessment:"Top-oil and winding temperatures are elevated but still within a manageable zone for a loaded unit. The focus is margin and trend.",evidence:["Top oil is 78 C","WTI is 96 C","Cooling stage is active"],actions:["Trend temperature against ambient and MVA","Confirm alarm and fan-start setpoints","Verify WTI/OTI calibration","Determine peak-day margin"],consequence:"Thermal monitoring is central to deciding whether the transformer can absorb additional load."}
+};
+var metricOrder=[["Status","status"],["Voltage","voltage"],["Current","current"],["Power","power"],["Health","health"],["Temperature","temp"],["Condition","condition"],["Comms","comms"]];
+function esc(v){return String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;")}function ge(id){return document.getElementById(id)}function confClass(c){return c==="High"?"risk-low":c==="Medium"?"risk-medium":"risk-high"}function renderMetrics(a){var h="";for(var i=0;i<metricOrder.length;i++){h+='<div class="metric"><div class="metric-label">'+esc(metricOrder[i][0])+'</div><div class="metric-value">'+esc(a[metricOrder[i][1]])+'</div></div>'}ge("metrics").innerHTML=h}function renderList(id,items,tag){var h="";for(var i=0;i<items.length;i++){h+="<"+tag+">"+esc(items[i])+"</"+tag+">"}ge(id).innerHTML=h}
+function setSelected(id){var asset=assetData[id],insight=aiInsights[id]||defaultInsight;if(!asset)return;var sel=document.querySelectorAll(".selected");for(var i=0;i<sel.length;i++)sel[i].classList.remove("selected");var g=document.querySelector('[data-id="'+id+'"]');if(g)g.classList.add("selected");ge("asset-name").textContent=asset.name;ge("asset-type").textContent=asset.type;var rb=ge("risk-badge");rb.textContent=asset.risk+" Risk";rb.className="badge risk-"+asset.risk.toLowerCase();renderMetrics(asset);renderList("alarms",asset.alarms,"div");var nodes=ge("alarms").children;for(var j=0;j<nodes.length;j++)nodes[j].className="alarm";ge("owner-box").innerHTML="<strong>Data owner:</strong> "+esc(asset.owner);ge("last-update").textContent="Last update: simulated live data - "+(Math.floor(Math.random()*5)+1)+" seconds ago";ge("ai-title").textContent=insight.title;var c=ge("ai-confidence");c.textContent=insight.confidence+" Confidence";c.className="badge "+confClass(insight.confidence);ge("ai-assessment").textContent=insight.assessment;renderList("ai-evidence",insight.evidence,"li");renderList("ai-actions",insight.actions,"li");ge("ai-consequence").textContent=insight.consequence;ge("ai-answer").textContent="Try asking about DGA, oil temperature, tap changer condition, loading, cooling, or maintenance risk."}
+function currentId(){var s=document.querySelector(".selected");return s&&s.getAttribute("data-id")?s.getAttribute("data-id"):"SOURCE115"}function answerQuestion(){var id=currentId(),asset=assetData[id],q=ge("ai-question").value.toLowerCase(),ans="This demo uses rule-based AI-style responses. In production, this would call a governed AI service with citations to SCADA, historian data, DGA lab results, online monitors, maintenance records, and OEM guidance.";if(!asset)return;if(q.indexOf("dga")>=0||q.indexOf("gas")>=0)ans=asset.name+": review absolute gas values and rate-of-change. In this demo, rising hydrogen and ethylene with low acetylene suggests thermal concern more than high-energy arcing.";else if(q.indexOf("oil")>=0||q.indexOf("temp")>=0||q.indexOf("hot")>=0)ans=asset.name+": compare top-oil, winding temperature, load, ambient, and cooling stage. Present condition suggests attention, not immediate emergency action.";else if(q.indexOf("tap")>=0||q.indexOf("ltc")>=0)ans=asset.name+": verify tap position, operation count, movement frequency, motor-drive condition, and maintenance interval.";else if(q.indexOf("load")>=0||q.indexOf("peak")>=0||q.indexOf("overload")>=0)ans=asset.name+": current loading is around 31.2 MVA. The key question is remaining thermal margin with elevated oil/winding temperature and active cooling.";else if(q.indexOf("cool")>=0||q.indexOf("fan")>=0||q.indexOf("radiator")>=0)ans=asset.name+": verify fan group availability, automatic stage sequencing, oil temperature response, and whether stage activation is earlier than expected.";else if(q.indexOf("risk")>=0||q.indexOf("why")>=0)ans=asset.name+": risk is "+asset.risk+". "+(aiInsights[id]||defaultInsight).assessment;ge("ai-answer").textContent=ans}
+function test(){var ids=Object.keys(assetData),m=[];for(var i=0;i<ids.length;i++){if(!document.querySelector('[data-id="'+ids[i]+'"]'))m.push(ids[i]+" has no SVG object")}setSelected("DGA_MON");var ok1=ge("asset-name").textContent==="Online DGA Monitor";setSelected("SOURCE115");var ok2=ge("asset-name").textContent==="115 kV Source";if(!ok1)m.push("DGA_MON selection failed");if(!ok2)m.push("SOURCE115 selection failed");var st=ge("test-status");if(m.length===0){st.textContent="Self-tests passed: all assets have SVG objects and working selection behavior.";st.style.color="#166534";st.style.background="#dcfce7";st.style.borderColor="#bbf7d0"}else{st.textContent="Self-tests found issues: "+m.join("; ");st.style.color="#991b1b";st.style.background="#fee2e2";st.style.borderColor="#fecaca"}}
+function init(){var items=document.querySelectorAll("[data-id]");for(var i=0;i<items.length;i++){items[i].addEventListener("click",function(e){setSelected(e.currentTarget.getAttribute("data-id"))})}ge("ai-ask-button").addEventListener("click",answerQuestion);ge("ai-question").addEventListener("keydown",function(e){if(e.key==="Enter")answerQuestion()});setSelected("SOURCE115");test()}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+}());
+</script>
+</body>
+</html>

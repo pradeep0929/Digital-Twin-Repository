@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wind Energy Facility Digital Twin Demo</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --yellow: #ca8a04;
+      --red: #dc2626;
+      --line: #334155;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+
+    .container { max-width: 1520px; margin: 0 auto; }
+    header { margin-bottom: 24px; }
+    .eyebrow { color: var(--blue); font-weight: 800; font-size: 14px; margin: 0 0 6px; }
+    h1 { font-size: 34px; line-height: 1.1; margin: 0; }
+    h2 { font-size: 22px; margin: 0; }
+    h3 { margin: 0; }
+    .subtitle { color: var(--muted); max-width: 1040px; line-height: 1.5; margin-top: 10px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(390px, 1fr);
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+      padding: 20px;
+    }
+
+    .card-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+    .small { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 12px; height: 12px; border-radius: 999px; display: inline-block; }
+
+    svg {
+      width: 100%;
+      height: 760px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+
+    .clickable { cursor: pointer; }
+    .clickable:hover text { fill: var(--blue); font-weight: 800; }
+    .selected .select-stroke { stroke: var(--blue) !important; stroke-width: 12 !important; }
+    .selected .select-fill { stroke: var(--blue) !important; stroke-width: 4 !important; fill: #dbeafe !important; }
+
+    .panel-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+    .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 10px; font-size: 13px; border: 1px solid; white-space: nowrap; font-weight: 800; }
+    .risk-low { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .risk-medium { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+    .risk-high { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+
+    .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .metric { background: #f8fafc; border: 1px solid var(--border); border-radius: 14px; padding: 12px; min-height: 72px; }
+    .metric-label { color: var(--muted); font-size: 12px; }
+    .metric-value { font-weight: 800; margin-top: 6px; }
+
+    .section { margin-top: 22px; }
+    .alarm-list { display: grid; gap: 8px; margin-top: 10px; }
+    .alarm { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 10px; font-size: 14px; }
+    .owner-box { margin-top: 16px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px; border-radius: 14px; font-size: 14px; }
+
+    .ai-panel { border-top: 1px solid var(--border); padding-top: 18px; }
+    .ai-header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+    .ai-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-top: 10px; font-size: 14px; }
+    .ai-box p { margin: 6px 0 0; color: #334155; line-height: 1.45; }
+    .ai-box ul, .ai-box ol { margin: 8px 0 0; padding-left: 20px; color: #334155; line-height: 1.45; }
+    .ai-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 800; }
+    .consequence { background: #fff7ed; border-color: #fed7aa; }
+
+    .ask-ai { margin-top: 14px; display: grid; gap: 8px; }
+    .ask-ai label { font-size: 13px; font-weight: 800; color: #334155; }
+    .ask-ai input { border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px; font-size: 14px; outline: none; }
+    .ask-ai input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #dbeafe; }
+    .ask-ai button { border: 0; border-radius: 12px; background: var(--blue); color: white; padding: 10px 12px; font-weight: 800; cursor: pointer; }
+    .ai-answer { margin-top: 10px; background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; border-radius: 14px; padding: 12px; font-size: 14px; line-height: 1.45; }
+
+    .footer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+    .info-card { background: #ffffff; border: 1px solid var(--border); border-radius: 18px; padding: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
+    .info-card p { color: var(--muted); font-size: 14px; line-height: 1.45; margin-bottom: 0; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; border-bottom: 1px solid var(--border); padding: 10px 8px; vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .test-status { margin-top: 16px; font-size: 13px; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px; }
+
+    @media (max-width: 1150px) {
+      .grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 14px; }
+      h1 { font-size: 26px; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: 1fr; }
+      svg { height: 580px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <p class="eyebrow">Wind Energy Facility Digital Twin Prototype</p>
+      <h1>Clickable Wind Farm Collector, Substation, SCADA, and Grid Interface Twin</h1>
+      <p class="subtitle">This standalone demo models a utility-scale wind facility digital twin: turbine strings, padmount transformers, MV collector feeders, collection substation, main transformer, breaker, met mast, SCADA/PPC, optional BESS, and grid point of interconnection. Values are simulated and intended for demonstration only.</p>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Interactive Wind Facility One-Line / Systems Map</h2>
+            <p class="small">Click any turbine, collector feeder, substation, control, weather, storage, or grid object.</p>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="dot" style="background:#16a34a"></span>Normal / Producing</span>
+            <span class="legend-item"><span class="dot" style="background:#ca8a04"></span>Attention / Curtailment</span>
+            <span class="legend-item"><span class="dot" style="background:#dc2626"></span>Alarm / Outage</span>
+          </div>
+        </div>
+
+        <svg viewBox="0 0 1180 800" aria-label="Interactive wind energy facility digital twin diagram">
+          <!-- Wind turbines row A -->
+          <g class="clickable device selected" data-id="WTG01">
+            <circle class="select-fill" cx="90" cy="80" r="25" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="90" y1="80" x2="90" y2="42" stroke="#334155" stroke-width="3" />
+            <line x1="90" y1="80" x2="122" y2="97" stroke="#334155" stroke-width="3" />
+            <line x1="90" y1="80" x2="58" y2="97" stroke="#334155" stroke-width="3" />
+            <text x="90" y="126" text-anchor="middle" font-size="12">WTG-01</text>
+            <circle cx="115" cy="58" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable device" data-id="WTG02">
+            <circle class="select-fill" cx="220" cy="80" r="25" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="220" y1="80" x2="220" y2="42" stroke="#334155" stroke-width="3" />
+            <line x1="220" y1="80" x2="252" y2="97" stroke="#334155" stroke-width="3" />
+            <line x1="220" y1="80" x2="188" y2="97" stroke="#334155" stroke-width="3" />
+            <text x="220" y="126" text-anchor="middle" font-size="12">WTG-02</text>
+            <circle cx="245" cy="58" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable device" data-id="WTG03">
+            <circle class="select-fill" cx="350" cy="80" r="25" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="350" y1="80" x2="350" y2="42" stroke="#334155" stroke-width="3" />
+            <line x1="350" y1="80" x2="382" y2="97" stroke="#334155" stroke-width="3" />
+            <line x1="350" y1="80" x2="318" y2="97" stroke="#334155" stroke-width="3" />
+            <text x="350" y="126" text-anchor="middle" font-size="12">WTG-03</text>
+            <circle cx="375" cy="58" r="7" fill="#ca8a04" />
+          </g>
+          <line x1="90" y1="145" x2="350" y2="145" stroke="#334155" stroke-width="4" />
+          <text x="220" y="166" text-anchor="middle" font-size="12" fill="#64748b">34.5 kV Collector Feeder A</text>
+          <line x1="350" y1="145" x2="520" y2="245" stroke="#334155" stroke-width="4" />
+
+          <!-- Wind turbines row B -->
+          <g class="clickable device" data-id="WTG04">
+            <circle class="select-fill" cx="90" cy="255" r="25" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="90" y1="255" x2="90" y2="217" stroke="#334155" stroke-width="3" />
+            <line x1="90" y1="255" x2="122" y2="272" stroke="#334155" stroke-width="3" />
+            <line x1="90" y1="255" x2="58" y2="272" stroke="#334155" stroke-width="3" />
+            <text x="90" y="301" text-anchor="middle" font-size="12">WTG-04</text>
+            <circle cx="115" cy="233" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable device" data-id="WTG05">
+            <circle class="select-fill" cx="220" cy="255" r="25" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="220" y1="255" x2="220" y2="217" stroke="#334155" stroke-width="3" />
+            <line x1="220" y1="255" x2="252" y2="272" stroke="#334155" stroke-width="3" />
+            <line x1="220" y1="255" x2="188" y2="272" stroke="#334155" stroke-width="3" />
+            <text x="220" y="301" text-anchor="middle" font-size="12">WTG-05</text>
+            <circle cx="245" cy="233" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable device" data-id="WTG06">
+            <circle class="select-fill" cx="350" cy="255" r="25" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="350" y1="255" x2="350" y2="217" stroke="#334155" stroke-width="3" />
+            <line x1="350" y1="255" x2="382" y2="272" stroke="#334155" stroke-width="3" />
+            <line x1="350" y1="255" x2="318" y2="272" stroke="#334155" stroke-width="3" />
+            <text x="350" y="301" text-anchor="middle" font-size="12">WTG-06</text>
+            <circle cx="375" cy="233" r="7" fill="#dc2626" />
+          </g>
+          <line x1="90" y1="320" x2="350" y2="320" stroke="#334155" stroke-width="4" />
+          <text x="220" y="342" text-anchor="middle" font-size="12" fill="#64748b">34.5 kV Collector Feeder B</text>
+          <line x1="350" y1="320" x2="520" y2="300" stroke="#334155" stroke-width="4" />
+
+          <!-- Collector station -->
+          <g class="clickable bus" data-id="COLLECTOR">
+            <line class="select-stroke" x1="520" y1="245" x2="520" y2="420" stroke="#111827" stroke-width="8" stroke-linecap="round" />
+            <text x="575" y="330" text-anchor="middle" font-size="14">34.5 kV Collector Bus</text>
+            <circle cx="520" cy="232" r="7" fill="#16a34a" />
+          </g>
+
+          <g class="clickable breaker" data-id="FDR_A">
+            <rect class="select-fill" x="470" y="225" width="42" height="38" rx="7" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="478" y1="256" x2="504" y2="232" stroke="#16a34a" stroke-width="4" />
+            <text x="442" y="249" text-anchor="middle" font-size="12">FDR-A</text>
+          </g>
+          <g class="clickable breaker" data-id="FDR_B">
+            <rect class="select-fill" x="470" y="310" width="42" height="38" rx="7" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="478" y1="341" x2="504" y2="317" stroke="#16a34a" stroke-width="4" />
+            <text x="442" y="334" text-anchor="middle" font-size="12">FDR-B</text>
+          </g>
+
+          <!-- Main transformer and high-side equipment -->
+          <line x1="520" y1="420" x2="650" y2="420" stroke="#334155" stroke-width="4" />
+          <g class="clickable transformer" data-id="GSU">
+            <circle class="select-fill" cx="685" cy="405" r="26" fill="white" stroke="#334155" stroke-width="2" />
+            <circle class="select-fill" cx="715" cy="435" r="26" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="700" y="480" text-anchor="middle" font-size="12">GSU Transformer</text>
+            <circle cx="735" cy="390" r="7" fill="#ca8a04" />
+          </g>
+          <line x1="742" y1="420" x2="810" y2="420" stroke="#334155" stroke-width="4" />
+          <g class="clickable breaker" data-id="POI_CB">
+            <rect class="select-fill" x="810" y="400" width="46" height="40" rx="7" fill="white" stroke="#334155" stroke-width="2" />
+            <line x1="819" y1="433" x2="847" y2="407" stroke="#16a34a" stroke-width="4" />
+            <text x="833" y="464" text-anchor="middle" font-size="12">POI CB</text>
+          </g>
+          <line x1="856" y1="420" x2="960" y2="420" stroke="#334155" stroke-width="4" />
+          <g class="clickable bus" data-id="POI">
+            <line class="select-stroke" x1="960" y1="420" x2="1120" y2="420" stroke="#111827" stroke-width="8" stroke-linecap="round" />
+            <text x="1040" y="398" text-anchor="middle" font-size="14">Transmission POI</text>
+            <circle cx="1135" cy="420" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable device" data-id="GRID">
+            <rect class="select-fill" x="970" y="295" width="150" height="58" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="1045" y="320" text-anchor="middle" font-size="13">Utility Grid</text>
+            <text x="1045" y="338" text-anchor="middle" font-size="11" fill="#64748b">230 kV</text>
+            <circle cx="1105" cy="308" r="7" fill="#16a34a" />
+          </g>
+          <line x1="1045" y1="353" x2="1045" y2="416" stroke="#334155" stroke-width="4" />
+
+          <!-- Reactive / capacitor / STATCOM -->
+          <line x1="520" y1="365" x2="650" y2="365" stroke="#334155" stroke-width="4" />
+          <g class="clickable device" data-id="STATCOM">
+            <rect class="select-fill" x="650" y="335" width="140" height="60" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="720" y="360" text-anchor="middle" font-size="13">STATCOM</text>
+            <text x="720" y="379" text-anchor="middle" font-size="11" fill="#64748b">Voltage support</text>
+            <circle cx="775" cy="348" r="7" fill="#16a34a" />
+          </g>
+
+          <!-- Controls, SCADA, Met, BESS -->
+          <g class="clickable device" data-id="PPC">
+            <rect class="select-fill" x="80" y="480" width="180" height="64" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="170" y="506" text-anchor="middle" font-size="13">Plant Controller</text>
+            <text x="170" y="526" text-anchor="middle" font-size="11" fill="#64748b">MW / Mvar / curtailment</text>
+            <circle cx="245" cy="493" r="7" fill="#ca8a04" />
+          </g>
+          <g class="clickable device" data-id="SCADA">
+            <rect class="select-fill" x="80" y="570" width="180" height="64" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="170" y="596" text-anchor="middle" font-size="13">SCADA / Historian</text>
+            <text x="170" y="616" text-anchor="middle" font-size="11" fill="#64748b">Alarms, SOE, tags</text>
+            <circle cx="245" cy="583" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable device" data-id="MET">
+            <rect class="select-fill" x="320" y="570" width="180" height="64" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="410" y="596" text-anchor="middle" font-size="13">Met Mast / Lidar</text>
+            <text x="410" y="616" text-anchor="middle" font-size="11" fill="#64748b">Wind, temp, icing</text>
+            <circle cx="485" cy="583" r="7" fill="#16a34a" />
+          </g>
+          <g class="clickable device" data-id="BESS">
+            <rect class="select-fill" x="650" y="540" width="155" height="64" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="728" y="566" text-anchor="middle" font-size="13">BESS</text>
+            <text x="728" y="586" text-anchor="middle" font-size="11" fill="#64748b">Optional hybrid</text>
+            <circle cx="790" cy="553" r="7" fill="#16a34a" />
+          </g>
+          <line x1="728" y1="540" x2="728" y2="480" stroke="#334155" stroke-width="4" />
+          <line x1="728" y1="480" x2="700" y2="450" stroke="#334155" stroke-width="4" />
+
+          <!-- Condition monitoring -->
+          <g class="clickable device" data-id="CMS">
+            <rect class="select-fill" x="900" y="570" width="190" height="64" rx="14" fill="white" stroke="#334155" stroke-width="2" />
+            <text x="995" y="596" text-anchor="middle" font-size="13">Condition Monitoring</text>
+            <text x="995" y="616" text-anchor="middle" font-size="11" fill="#64748b">Gearbox, blades, oil</text>
+            <circle cx="1075" cy="583" r="7" fill="#ca8a04" />
+          </g>
+
+          <!-- dependencies -->
+          <line x1="260" y1="512" x2="520" y2="300" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+          <line x1="260" y1="602" x2="520" y2="245" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+          <line x1="500" y1="602" x2="170" y2="480" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+          <line x1="900" y1="602" x2="350" y2="255" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7" />
+        </svg>
+      </section>
+
+      <aside class="card" id="asset-panel">
+        <div class="panel-top">
+          <div>
+            <p class="small" style="margin:0">Selected Asset</p>
+            <h2 id="asset-name">WTG-01</h2>
+            <p class="small" id="asset-type">Wind Turbine Generator</p>
+          </div>
+          <span id="risk-badge" class="badge risk-low">Low Risk</span>
+        </div>
+        <div class="metrics" id="metrics"></div>
+        <div class="section">
+          <h3>Active Alarms / Notes</h3>
+          <div class="alarm-list" id="alarms"></div>
+        </div>
+        <div class="owner-box" id="owner-box"><strong>Data owner:</strong> Wind O&M</div>
+        <p class="small" id="last-update">Last update: simulated live data</p>
+
+        <div class="section ai-panel">
+          <div class="ai-header">
+            <div>
+              <p class="eyebrow" style="margin:0">AI Wind Operations Assistant</p>
+              <h3 id="ai-title">Asset assessment</h3>
+            </div>
+            <span id="ai-confidence" class="badge risk-medium">Medium Confidence</span>
+          </div>
+          <div class="ai-box"><div class="ai-label">Assessment</div><p id="ai-assessment"></p></div>
+          <div class="ai-box"><div class="ai-label">Evidence Used</div><ul id="ai-evidence"></ul></div>
+          <div class="ai-box"><div class="ai-label">Recommended Next Checks</div><ol id="ai-actions"></ol></div>
+          <div class="ai-box consequence"><div class="ai-label">Production / Grid / Maintenance Consequence</div><p id="ai-consequence"></p></div>
+          <div class="ask-ai">
+            <label for="ai-question">Ask the twin</label>
+            <input id="ai-question" type="text" placeholder="Example: Why is production below forecast?" />
+            <button id="ai-ask-button" type="button">Ask</button>
+          </div>
+          <div id="ai-answer" class="ai-answer">Try asking about production, curtailment, alarms, maintenance, grid limits, icing, or ownership.</div>
+        </div>
+      </aside>
+    </main>
+
+    <section class="card" style="margin-top:24px">
+      <h2>Wind Facility Digital Twin Readiness / Execution Risk Checks</h2>
+      <p class="small">A useful wind-facility twin should expose gaps before they become lost production, failed grid-code response, unplanned turbine downtime, collector feeder outages, or repeated vendor/utility clarification loops.</p>
+      <div class="table-wrap" style="margin-top:14px">
+        <table>
+          <thead><tr><th>ID</th><th>Category</th><th>Issue</th><th>Consequence</th><th>Severity</th></tr></thead>
+          <tbody>
+            <tr><td>WIND-001</td><td>Completeness</td><td>WTG-06 is faulted but condition-monitoring evidence is not linked to the turbine event</td><td>O&M may lose time deciding whether dispatch, reset, or crane/major repair is required</td><td>High</td></tr>
+            <tr><td>WIND-002</td><td>Interface</td><td>PPC curtailment status is active but grid-operator command source is not explicitly shown</td><td>Production loss may be misattributed to wind resource or turbine performance</td><td>High</td></tr>
+            <tr><td>WIND-003</td><td>Consistency</td><td>GSU transformer thermal trend is elevated relative to site output</td><td>Full-site production may be constrained during high-wind periods</td><td>Medium</td></tr>
+            <tr><td>WIND-004</td><td>Commissioning</td><td>Reactive-power / voltage-control response is modeled but not tied to grid-code test evidence</td><td>Utility acceptance or compliance test repeat risk</td><td>High</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="test-status" id="test-status">Self-tests not run yet.</div>
+    </section>
+
+    <section class="footer-grid">
+      <div class="info-card"><h3>Operations</h3><p>Operators click turbines, feeders, PPC, substation, or POI objects and see production, alarms, curtailment, and grid status.</p></div>
+      <div class="info-card"><h3>Engineering</h3><p>Engineers compare collector loading, protection status, GSU ratings, STATCOM response, PPC settings, and grid-code requirements.</p></div>
+      <div class="info-card"><h3>Maintenance</h3><p>O&M teams correlate turbine alarms, weather, condition monitoring, access limits, spare parts, and lost-production consequence.</p></div>
+      <div class="info-card"><h3>Manager Value</h3><p>Reduces lost-production ambiguity, clarifies utility/OEM/O&M boundaries, and exposes issues the team should not discover during high-wind events.</p></div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var assetData = {
+        WTG01: { name: "WTG-01", type: "Wind Turbine Generator", status: "Producing", voltage: "690 V / 34.5 kV", current: "82 A MV", power: "4.1 MW", wind: "10.8 m/s", temp: "Nacelle 32 C", limit: "No curtailment", alarms: ["None"], comms: "Healthy", owner: "Wind O&M", risk: "Low" },
+        WTG02: { name: "WTG-02", type: "Wind Turbine Generator", status: "Producing", voltage: "690 V / 34.5 kV", current: "78 A MV", power: "3.9 MW", wind: "10.5 m/s", temp: "Nacelle 31 C", limit: "No curtailment", alarms: ["None"], comms: "Healthy", owner: "Wind O&M", risk: "Low" },
+        WTG03: { name: "WTG-03", type: "Wind Turbine Generator", status: "Derated", voltage: "690 V / 34.5 kV", current: "55 A MV", power: "2.6 MW", wind: "10.7 m/s", temp: "Gearbox oil 78 C", limit: "Thermal derate", alarms: ["Gearbox oil temperature high watch"], comms: "Healthy", owner: "Wind O&M / OEM", risk: "Medium" },
+        WTG04: { name: "WTG-04", type: "Wind Turbine Generator", status: "Producing", voltage: "690 V / 34.5 kV", current: "80 A MV", power: "4.0 MW", wind: "10.6 m/s", temp: "Nacelle 33 C", limit: "No curtailment", alarms: ["None"], comms: "Healthy", owner: "Wind O&M", risk: "Low" },
+        WTG05: { name: "WTG-05", type: "Wind Turbine Generator", status: "Producing", voltage: "690 V / 34.5 kV", current: "84 A MV", power: "4.2 MW", wind: "10.9 m/s", temp: "Nacelle 32 C", limit: "No curtailment", alarms: ["None"], comms: "Healthy", owner: "Wind O&M", risk: "Low" },
+        WTG06: { name: "WTG-06", type: "Wind Turbine Generator", status: "Faulted", voltage: "690 V / 34.5 kV", current: "0 A", power: "0.0 MW", wind: "10.8 m/s", temp: "Blade bearing vibration high", limit: "Stopped", alarms: ["Blade bearing vibration trip", "Remote reset inhibited"], comms: "Healthy", owner: "Wind O&M / OEM", risk: "High" },
+        FDR_A: { name: "Collector Feeder A Breaker", type: "34.5 kV Feeder Breaker", status: "Closed", voltage: "34.7 kV", current: "215 A", power: "10.6 MW", wind: "N/A", temp: "Breaker 38 C", limit: "Normal", alarms: ["None"], comms: "Healthy", owner: "Substation / Protection", risk: "Low" },
+        FDR_B: { name: "Collector Feeder B Breaker", type: "34.5 kV Feeder Breaker", status: "Closed", voltage: "34.6 kV", current: "170 A", power: "8.2 MW", wind: "N/A", temp: "Breaker 39 C", limit: "One turbine offline", alarms: ["WTG-06 feeder section alarm"], comms: "Healthy", owner: "Substation / Protection", risk: "Medium" },
+        COLLECTOR: { name: "34.5 kV Collector Bus", type: "Collector Bus", status: "Energized", voltage: "34.6 kV", current: "385 A", power: "18.8 MW", wind: "10.7 m/s site avg", temp: "N/A", limit: "Feeder B reduced", alarms: ["None"], comms: "Healthy", owner: "Substation Engineering", risk: "Low" },
+        GSU: { name: "Main GSU Transformer", type: "34.5 / 230 kV Transformer", status: "Attention", voltage: "34.6 / 231 kV", current: "385 A LV", power: "18.8 MW", wind: "N/A", temp: "Top oil 76 C", limit: "Cooling stage 1 active", alarms: ["Oil temperature trend elevated"], comms: "Healthy", owner: "Substation Engineering", risk: "Medium" },
+        POI_CB: { name: "POI Breaker", type: "230 kV Circuit Breaker", status: "Closed", voltage: "231 kV", current: "47 A", power: "18.8 MW", wind: "N/A", temp: "Breaker 41 C", limit: "Normal", alarms: ["None"], comms: "Healthy", owner: "Utility / Plant Substation", risk: "Low" },
+        POI: { name: "Transmission Point of Interconnection", type: "230 kV POI", status: "In service", voltage: "231 kV", current: "47 A", power: "18.8 MW", wind: "N/A", temp: "N/A", limit: "Export schedule 22 MW", alarms: ["None"], comms: "Healthy", owner: "Utility / Grid Operations", risk: "Low" },
+        GRID: { name: "Utility Grid", type: "Transmission Grid", status: "Connected", voltage: "231 kV", current: "47 A", power: "18.8 MW export", wind: "N/A", temp: "N/A", limit: "Voltage control required", alarms: ["None"], comms: "Healthy", owner: "Grid Operations", risk: "Low" },
+        STATCOM: { name: "STATCOM / Reactive Support", type: "Dynamic Reactive Device", status: "Regulating", voltage: "34.6 kV", current: "52 A", power: "+6.5 Mvar", wind: "N/A", temp: "Cabinet 35 C", limit: "Voltage schedule active", alarms: ["None"], comms: "Healthy", owner: "Plant Controls / OEM", risk: "Low" },
+        PPC: { name: "Plant Power Controller", type: "PPC / Plant Controller", status: "Curtailment Active", voltage: "N/A", current: "N/A", power: "22 MW plant limit", wind: "10.7 m/s", temp: "Control room 23 C", limit: "Grid command active", alarms: ["Curtailment command active", "Source tag not confirmed"], comms: "Healthy", owner: "Plant Controls / Grid Ops", risk: "Medium" },
+        SCADA: { name: "SCADA / Historian", type: "Operations Data Platform", status: "Online", voltage: "N/A", current: "N/A", power: "Data quality 96%", wind: "Met data online", temp: "N/A", limit: "One stale CMS tag", alarms: ["WTG-06 event data pending upload"], comms: "Healthy", owner: "OT / SCADA", risk: "Low" },
+        MET: { name: "Met Mast / Lidar", type: "Meteorological System", status: "Online", voltage: "24 Vdc", current: "N/A", power: "N/A", wind: "10.7 m/s avg", temp: "Ambient 12 C", limit: "Low icing risk", alarms: ["None"], comms: "Healthy", owner: "Performance Engineering", risk: "Low" },
+        BESS: { name: "Battery Energy Storage System", type: "Hybrid Storage", status: "Available", voltage: "1,250 Vdc / 34.5 kV", current: "Standby", power: "0.0 MW / 8 MWh", wind: "N/A", temp: "Container 26 C", limit: "SOC 64%", alarms: ["None"], comms: "Healthy", owner: "BESS Operations", risk: "Low" },
+        CMS: { name: "Condition Monitoring System", type: "CMS / Predictive Maintenance", status: "Attention", voltage: "N/A", current: "N/A", power: "N/A", wind: "N/A", temp: "N/A", limit: "WTG-06 vibration high", alarms: ["WTG-06 blade bearing vibration", "WTG-03 gearbox oil trend"], comms: "Healthy", owner: "Reliability Engineering / OEM", risk: "Medium" }
+      };
+
+      var aiInsights = {
+        WTG01: { title: "WTG-01 is producing normally", confidence: "High", assessment: "WTG-01 output is consistent with site wind speed and no active curtailment is applied to this turbine. AI would compare power curve performance against nearby turbines.", evidence: ["Power is 4.1 MW", "Wind speed is 10.8 m/s", "No active alarm"], actions: ["Compare power curve with WTG-02 and WTG-04", "Check yaw error trend", "Verify availability counter", "Confirm no hidden curtailment flag"], consequence: "Normal turbines create the baseline used to detect underperformance elsewhere." },
+        WTG02: { title: "WTG-02 is producing normally", confidence: "High", assessment: "WTG-02 is aligned with expected output for the wind conditions. It can be used as a peer comparison against WTG-03 derate and WTG-06 outage.", evidence: ["Power is 3.9 MW", "Wind speed is 10.5 m/s", "No active alarm"], actions: ["Compare against WTG-01 and WTG-05", "Check rotor speed and pitch response", "Confirm no alarm suppression", "Review 10-minute average availability"], consequence: "Peer turbines help distinguish resource limitation from equipment limitation." },
+        WTG03: { title: "WTG-03 is derated due to thermal condition", confidence: "High", assessment: "WTG-03 is producing below nearby turbines under similar wind speed. Gearbox oil temperature is elevated, suggesting a thermal derate rather than wind resource limitation.", evidence: ["Power is 2.6 MW", "Wind speed is 10.7 m/s", "Gearbox oil temperature high watch", "Limit says thermal derate"], actions: ["Check gearbox oil cooling fans/pumps", "Compare nacelle ambient and oil temperature trend", "Review OEM derate code", "Schedule inspection before next high-wind period", "Estimate lost production under current curtailment"], consequence: "Unresolved derate can create recurring lost production and may escalate to forced outage if thermal trend worsens." },
+        WTG04: { title: "WTG-04 is producing normally", confidence: "High", assessment: "WTG-04 output is consistent with site wind speed. AI would use it as a comparison point for Feeder B performance.", evidence: ["Power is 4.0 MW", "Wind speed is 10.6 m/s", "No active alarm"], actions: ["Compare with WTG-05", "Check feeder B voltage quality", "Validate turbine availability status", "Review curtailment flag"], consequence: "Healthy feeder peers help isolate WTG-06 fault from collector feeder issues." },
+        WTG05: { title: "WTG-05 is producing normally", confidence: "High", assessment: "WTG-05 is performing well and appears unaffected by WTG-06 fault. AI would monitor feeder B for any shared collector issue.", evidence: ["Power is 4.2 MW", "Wind speed is 10.9 m/s", "No active alarm"], actions: ["Confirm feeder B voltage remains stable", "Compare power curve with WTG-04", "Check wake/curtailment assumptions", "Verify alarm history"], consequence: "If WTG-05 remains normal, the likely issue is local to WTG-06 rather than the feeder." },
+        WTG06: { title: "WTG-06 outage is high priority", confidence: "High", assessment: "WTG-06 is faulted with a blade bearing vibration trip and remote reset inhibited. AI treats this as a maintenance dispatch and production-loss issue, not a simple SCADA reset.", evidence: ["Power is 0.0 MW", "Blade bearing vibration trip", "Remote reset inhibited", "Wind speed is 10.8 m/s"], actions: ["Review CMS vibration spectrum", "Confirm OEM fault code and reset policy", "Check access road/weather constraints", "Estimate lost production for current forecast", "Plan inspection and spare-parts readiness"], consequence: "The turbine is losing full production during good wind. Delayed triage can convert a fixable fault into extended outage or major-component risk." },
+        FDR_A: { title: "Feeder A breaker is normal", confidence: "High", assessment: "Feeder A is closed and supporting normal turbine output. AI would reconcile feeder power with turbine totals.", evidence: ["Breaker is closed", "Feeder power is 10.6 MW", "No active alarm"], actions: ["Compare feeder MW with WTG-01 to WTG-03 totals", "Verify relay targets are clear", "Confirm breaker status in SCADA", "Check feeder voltage profile"], consequence: "Feeder reconciliation catches metering or collector model errors before they affect performance reporting." },
+        FDR_B: { title: "Feeder B is closed but reduced by WTG-06 outage", confidence: "High", assessment: "Feeder B equipment appears healthy, but output is reduced because one turbine is offline. AI separates feeder electrical health from turbine availability.", evidence: ["Breaker is closed", "WTG-06 feeder section alarm", "Feeder B power is 8.2 MW"], actions: ["Confirm feeder relay targets are clear", "Check WTG-06 padmount/sectionalizer status", "Reconcile feeder power against WTG-04/05/06", "Confirm no collector cable alarm"], consequence: "Without this separation, operations may chase a collector feeder issue when the problem is a turbine fault." },
+        COLLECTOR: { title: "Collector bus is energized and stable", confidence: "Medium", assessment: "Collector bus voltage is normal. AI would compare collector totals with turbine outputs and plant export to detect losses, metering mismatch, or curtailment.", evidence: ["Voltage is 34.6 kV", "Power is 18.8 MW", "Feeder B reduced"], actions: ["Reconcile collector MW with feeder totals", "Check MV voltage profile", "Confirm collector protection status", "Review reactive flow to STATCOM"], consequence: "Collector data is the bridge between turbine performance and substation/export accounting." },
+        GSU: { title: "GSU transformer thermal trend needs review", confidence: "High", assessment: "GSU top-oil temperature is elevated relative to current export. This could reflect ambient conditions, cooling status, prior loading, sensor issue, or a cooling-control problem.", evidence: ["Top oil is 76 C", "Cooling stage 1 active", "Site export is 18.8 MW", "Alarm says oil temperature trend elevated"], actions: ["Compare top-oil trend against ambient and prior load", "Verify fan/pump status", "Check alarm thresholds and SCADA mapping", "Confirm full-site output thermal margin", "Inspect cooling system before high-wind forecast"], consequence: "If unresolved, the GSU may become the limiting factor during high-wind periods and cause preventable curtailment." },
+        POI_CB: { title: "POI breaker is normal; trip/status paths should be evidence-linked", confidence: "High", assessment: "The POI breaker is closed with no alarm. AI would verify breaker status, trip circuit, breaker failure, and SOE evidence for grid events.", evidence: ["Breaker is closed", "No alarm", "Export is 18.8 MW"], actions: ["Verify 52a/52b status", "Confirm utility trip paths", "Check breaker failure logic", "Link SOE data to event reports"], consequence: "A missing status/trip path can cause utility acceptance comments or event reconstruction gaps." },
+        POI: { title: "POI export is below schedule limit due to plant-side availability", confidence: "Medium", assessment: "POI export is 18.8 MW against a 22 MW schedule. AI correlates this to WTG-06 outage, WTG-03 derate, and active PPC curtailment command.", evidence: ["Export is 18.8 MW", "Schedule limit is 22 MW", "WTG-06 is faulted", "PPC curtailment command active"], actions: ["Separate grid curtailment from equipment availability", "Confirm settlement meter data", "Verify PPC command source", "Estimate lost production by cause"], consequence: "Without cause separation, lost production may be misallocated between grid curtailment, turbine faults, and plant equipment limits." },
+        GRID: { title: "Grid interface is connected; voltage-control obligation remains active", confidence: "Medium", assessment: "The utility grid connection is normal, but plant voltage-control obligations remain active through PPC/STATCOM response.", evidence: ["Grid connected", "Voltage is 231 kV", "Voltage control required"], actions: ["Verify voltage schedule from utility", "Confirm STATCOM response", "Check PPC voltage/Mvar mode", "Review grid-code test evidence"], consequence: "Grid-code failures usually arise from controls/interface assumptions rather than the physical one-line." },
+        STATCOM: { title: "STATCOM is regulating normally", confidence: "High", assessment: "Reactive support is active and healthy. AI would verify voltage schedule tracking and response during turbine output changes.", evidence: ["STATCOM regulating", "+6.5 Mvar", "Voltage schedule active"], actions: ["Check response to PPC command", "Verify Mvar limits", "Confirm alarms and bypass states", "Link grid-code test evidence"], consequence: "STATCOM/PPC mismatch can cause compliance failures even when the plant is producing normally." },
+        PPC: { title: "PPC curtailment command source needs confirmation", confidence: "High", assessment: "The plant controller shows active curtailment and a grid command, but source tag is not confirmed. AI flags this because production accounting and operator response depend on command provenance.", evidence: ["Curtailment command active", "Plant limit is 22 MW", "Source tag not confirmed"], actions: ["Confirm command source: utility, market, plant, or automated constraint", "Check PPC mode and priority stack", "Log curtailment start/end time", "Separate curtailment from turbine fault losses", "Verify operator alarm text"], consequence: "If curtailment source is unclear, teams may waste time disputing production loss instead of resolving equipment and grid constraints." },
+        SCADA: { title: "SCADA is online but WTG-06 event data is incomplete", confidence: "High", assessment: "SCADA and historian are online, but WTG-06 event data is pending. AI treats this as a troubleshooting delay risk.", evidence: ["Data quality 96%", "WTG-06 event data pending upload", "One stale CMS tag"], actions: ["Retrieve WTG-06 event record", "Check historian latency", "Confirm CMS tag freshness", "Verify alarm routing to O&M workflow"], consequence: "Missing event data slows root-cause analysis and can delay field dispatch decisions." },
+        MET: { title: "Met data is healthy and supports performance diagnosis", confidence: "High", assessment: "Met mast/Lidar data is online and shows strong wind with low icing risk. This supports the conclusion that WTG-03 and WTG-06 issues are equipment-related rather than resource-related.", evidence: ["Wind speed is 10.7 m/s", "Ambient is 12 C", "Low icing risk"], actions: ["Compare turbine nacelle anemometers to met mast", "Check wind direction and wake assumptions", "Verify icing sensor status", "Use data for lost-production estimate"], consequence: "Reliable met data prevents incorrect attribution of underperformance to weather." },
+        BESS: { title: "BESS is available for hybrid services", confidence: "Medium", assessment: "The BESS is available with 64% state of charge. AI would verify dispatch rules, PPC integration, and grid services eligibility.", evidence: ["SOC 64%", "BESS available", "No alarm"], actions: ["Confirm PPC/BESS dispatch priority", "Check PCS status", "Verify reactive support role", "Confirm interconnection/export constraints"], consequence: "A BESS can help smooth plant output, but ambiguous control priority can create dispatch conflicts." },
+        CMS: { title: "Condition monitoring is flagging turbine reliability risk", confidence: "High", assessment: "CMS has attention items for WTG-06 blade bearing vibration and WTG-03 gearbox oil trend. AI links condition data to production loss and maintenance planning.", evidence: ["WTG-06 vibration high", "WTG-03 gearbox oil trend", "SCADA says one stale CMS tag"], actions: ["Validate WTG-06 vibration data quality", "Review WTG-03 oil/cooling trend", "Prioritize OEM review", "Check spare parts and crane availability", "Add CMS evidence to work orders"], consequence: "Condition monitoring only improves availability if it is tied to work orders, production impact, and access planning." }
+      };
+
+      var metricOrder = [["Status", "status"], ["Voltage", "voltage"], ["Current", "current"], ["Power", "power"], ["Wind", "wind"], ["Temperature", "temp"], ["Limit", "limit"], ["Comms", "comms"]];
+
+      function escapeHtml(value) {
+        return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
+      }
+      function getElement(id) { return document.getElementById(id); }
+      function confidenceClass(confidence) { if (confidence === "High") return "risk-low"; if (confidence === "Medium") return "risk-medium"; return "risk-high"; }
+      function renderMetrics(asset) {
+        var html = "";
+        for (var i = 0; i < metricOrder.length; i += 1) {
+          var label = metricOrder[i][0]; var key = metricOrder[i][1];
+          html += '<div class="metric"><div class="metric-label">' + escapeHtml(label) + '</div><div class="metric-value">' + escapeHtml(asset[key]) + '</div></div>';
+        }
+        getElement("metrics").innerHTML = html;
+      }
+      function renderList(id, items, tagName) {
+        var html = "";
+        for (var i = 0; i < items.length; i += 1) html += "<" + tagName + ">" + escapeHtml(items[i]) + "</" + tagName + ">";
+        getElement(id).innerHTML = html;
+      }
+      function setSelected(id) {
+        var asset = assetData[id]; var insight = aiInsights[id];
+        if (!asset || !insight) return;
+        var selectedItems = document.querySelectorAll(".selected");
+        for (var i = 0; i < selectedItems.length; i += 1) selectedItems[i].classList.remove("selected");
+        var group = document.querySelector('[data-id="' + id + '"]');
+        if (group) group.classList.add("selected");
+        getElement("asset-name").textContent = asset.name;
+        getElement("asset-type").textContent = asset.type;
+        var riskBadge = getElement("risk-badge");
+        riskBadge.textContent = asset.risk + " Risk";
+        riskBadge.className = "badge risk-" + asset.risk.toLowerCase();
+        renderMetrics(asset);
+        renderList("alarms", asset.alarms, "div");
+        var alarmNodes = getElement("alarms").children;
+        for (var j = 0; j < alarmNodes.length; j += 1) alarmNodes[j].className = "alarm";
+        getElement("owner-box").innerHTML = "<strong>Data owner:</strong> " + escapeHtml(asset.owner);
+        getElement("last-update").textContent = "Last update: simulated live data - " + (Math.floor(Math.random() * 5) + 1) + " seconds ago";
+        getElement("ai-title").textContent = insight.title;
+        var conf = getElement("ai-confidence");
+        conf.textContent = insight.confidence + " Confidence";
+        conf.className = "badge " + confidenceClass(insight.confidence);
+        getElement("ai-assessment").textContent = insight.assessment;
+        renderList("ai-evidence", insight.evidence, "li");
+        renderList("ai-actions", insight.actions, "li");
+        getElement("ai-consequence").textContent = insight.consequence;
+        getElement("ai-answer").textContent = "Try asking about production, curtailment, alarms, maintenance, grid limits, icing, or ownership.";
+      }
+      function getCurrentSelectedId() {
+        var selected = document.querySelector(".selected");
+        if (selected && selected.getAttribute("data-id")) return selected.getAttribute("data-id");
+        return "WTG01";
+      }
+      function answerQuestion() {
+        var selected = getCurrentSelectedId();
+        var asset = assetData[selected]; var insight = aiInsights[selected];
+        var q = getElement("ai-question").value.toLowerCase();
+        var answer = "This demo uses rule-based AI-style responses. In a production wind twin, this would call a governed AI service with citations to SCADA, historian, PPC logs, CMS data, met data, work orders, grid curtailment records, and relay/event files.";
+        if (!asset || !insight) return;
+        if (q.indexOf("production") >= 0 || q.indexOf("forecast") >= 0 || q.indexOf("mw") >= 0 || q.indexOf("loss") >= 0) {
+          answer = asset.name + ": production context is " + asset.power + " with limit/status " + asset.limit + ". AI would separate losses into wind resource, grid curtailment, turbine fault, collector constraint, and substation limit.";
+        } else if (q.indexOf("curtail") >= 0 || q.indexOf("grid") >= 0) {
+          answer = asset.name + ": curtailment/grid review should confirm command source, PPC mode, grid voltage schedule, STATCOM response, and whether lost production is externally commanded or plant-caused.";
+        } else if (q.indexOf("alarm") >= 0 || q.indexOf("fault") >= 0) {
+          answer = asset.name + ": current alarms/notes are " + asset.alarms.join("; ") + ". AI would verify source system, timestamp, reset policy, owner, and whether the alarm requires dispatch.";
+        } else if (q.indexOf("maint") >= 0 || q.indexOf("repair") >= 0 || q.indexOf("work") >= 0) {
+          answer = asset.name + ": maintenance review should verify access, spare parts, OEM fault code, work order status, safety isolation requirements, and production consequence. First checks: " + insight.actions.slice(0, 4).join("; ") + ".";
+        } else if (q.indexOf("icing") >= 0 || q.indexOf("weather") >= 0 || q.indexOf("wind") >= 0) {
+          answer = asset.name + ": current site wind/met context is " + asset.wind + ". AI would compare met mast, nacelle anemometers, icing status, wake conditions, and expected power curve.";
+        } else if (q.indexOf("owner") >= 0 || q.indexOf("ownership") >= 0) {
+          answer = asset.name + ": current data owner is " + asset.owner + ". AI would still require explicit ownership across OEM, O&M, grid operations, SCADA/OT, substation protection, and asset management.";
+        } else if (q.indexOf("risk") >= 0 || q.indexOf("why") >= 0) {
+          answer = asset.name + ": risk is " + asset.risk + ". AI assessment: " + insight.assessment;
+        }
+        getElement("ai-answer").textContent = answer;
+      }
+      function runSelfTests() {
+        var requiredIds = Object.keys(assetData); var missing = [];
+        for (var i = 0; i < requiredIds.length; i += 1) {
+          var id = requiredIds[i];
+          if (!document.querySelector('[data-id="' + id + '"]')) missing.push(id + " has no SVG object");
+          if (!aiInsights[id]) missing.push(id + " has no AI insight");
+        }
+        setSelected("WTG06");
+        var wtgOk = getElement("asset-name").textContent === "WTG-06";
+        setSelected("WTG01");
+        var startOk = getElement("asset-name").textContent === "WTG-01";
+        if (!wtgOk) missing.push("WTG06 selection test failed");
+        if (!startOk) missing.push("WTG01 selection test failed");
+        var status = getElement("test-status");
+        if (missing.length === 0) {
+          status.textContent = "Self-tests passed: all assets have SVG objects, AI insights, and working selection behavior.";
+          status.style.color = "#166534"; status.style.background = "#dcfce7"; status.style.borderColor = "#bbf7d0";
+        } else {
+          status.textContent = "Self-tests found issues: " + missing.join("; ");
+          status.style.color = "#991b1b"; status.style.background = "#fee2e2"; status.style.borderColor = "#fecaca";
+        }
+      }
+      function init() {
+        var clickableItems = document.querySelectorAll("[data-id]");
+        for (var i = 0; i < clickableItems.length; i += 1) {
+          clickableItems[i].addEventListener("click", function (event) { setSelected(event.currentTarget.getAttribute("data-id")); });
+        }
+        getElement("ai-ask-button").addEventListener("click", answerQuestion);
+        getElement("ai-question").addEventListener("keydown", function (event) { if (event.key === "Enter") answerQuestion(); });
+        setSelected("WTG01");
+        runSelfTests();
+      }
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+    }());
+  </script>
+</body>
+</html>
